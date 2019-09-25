@@ -20,25 +20,21 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 
 /**
- * Base class for events raised for an {@code ApplicationContext}.
- *
- * @author Juergen Hoeller
- * @since 2.5
+ * 应用容器事件
  */
 @SuppressWarnings("serial")
 public abstract class ApplicationContextEvent extends ApplicationEvent {
 
 	/**
-	 * Create a new ContextStartedEvent.
-	 * @param source the {@code ApplicationContext} that the event is raised for
-	 * (must not be {@code null})
+	 * 实例化一个新的ContextStartedEvent。
+	 * @param source 与事件相关联源头 {@code ApplicationContext}
 	 */
 	public ApplicationContextEvent(ApplicationContext source) {
 		super(source);
 	}
 
 	/**
-	 * Get the {@code ApplicationContext} that the event was raised for.
+	 * 获取引发该事件的{@code ApplicationContext}。
 	 */
 	public final ApplicationContext getApplicationContext() {
 		return (ApplicationContext) getSource();

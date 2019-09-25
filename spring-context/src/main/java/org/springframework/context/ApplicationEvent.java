@@ -19,27 +19,18 @@ package org.springframework.context;
 import java.util.EventObject;
 
 /**
- * Class to be extended by all application events. Abstract as it
- * doesn't make sense for generic events to be published directly.
- *
- * @author Rod Johnson
- * @author Juergen Hoeller
- * @see org.springframework.context.ApplicationListener
- * @see org.springframework.context.event.EventListener
+ * 应用事件
  */
 public abstract class ApplicationEvent extends EventObject {
 
-	/** use serialVersionUID from Spring 1.2 for interoperability. */
 	private static final long serialVersionUID = 7099057708183571937L;
 
-	/** System time when the event happened. */
+	/** 事件发生的系统时间. */
 	private final long timestamp;
-
-
+	
 	/**
-	 * Create a new {@code ApplicationEvent}.
-	 * @param source the object on which the event initially occurred or with
-	 * which the event is associated (never {@code null})
+	 * 实例化一个新的{@code ApplicationEvent}。
+	 * @param source 与事件相关联源头的对象
 	 */
 	public ApplicationEvent(Object source) {
 		super(source);
@@ -48,7 +39,7 @@ public abstract class ApplicationEvent extends EventObject {
 
 
 	/**
-	 * Return the system time in milliseconds when the event occurred.
+	 * 事件发生的系统时间
 	 */
 	public final long getTimestamp() {
 		return this.timestamp;

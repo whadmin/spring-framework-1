@@ -37,33 +37,27 @@ import org.springframework.lang.Nullable;
 public interface ApplicationEventMulticaster {
 
 	/**
-	 * Add a listener to be notified of all events.
-	 * @param listener the listener to add
+	 * 添加一个侦听器以通知所有事件。
 	 */
 	void addApplicationListener(ApplicationListener<?> listener);
 
 	/**
-	 * Add a listener bean to be notified of all events.
-	 * @param listenerBeanName the name of the listener bean to add
+	 * 添加一个侦听器bean，以通知所有事件
 	 */
 	void addApplicationListenerBean(String listenerBeanName);
 
 	/**
-	 * Remove a listener from the notification list.
-	 * @param listener the listener to remove
+	 * 从通知列表中删除一个侦听器。
 	 */
 	void removeApplicationListener(ApplicationListener<?> listener);
 
 	/**
-	 * Remove a listener bean from the notification list.
-	 * @param listenerBeanName the name of the listener bean to remove
+	 * 从通知列表中删除一个侦听器bean。
 	 */
 	void removeApplicationListenerBean(String listenerBeanName);
 
 	/**
-	 * Remove all listeners registered with this multicaster.
-	 * <p>After a remove call, the multicaster will perform no action
-	 * on event notification until new listeners are registered.
+	 * 删除在此多播器上注册的所有侦听器。
 	 */
 	void removeAllListeners();
 

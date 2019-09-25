@@ -19,20 +19,14 @@ package org.springframework.context.event;
 import org.springframework.context.ApplicationContext;
 
 /**
- * Event raised when an {@code ApplicationContext} gets started.
- *
- * @author Mark Fisher
- * @author Juergen Hoeller
- * @since 2.5
- * @see ContextStoppedEvent
+ * ApplicationContext启动时引发的事件。
  */
 @SuppressWarnings("serial")
 public class ContextStartedEvent extends ApplicationContextEvent {
 
 	/**
-	 * Create a new ContextStartedEvent.
-	 * @param source the {@code ApplicationContext} that has been started
-	 * (must not be {@code null})
+	 * 创建一个新的ContextStartedEvent
+	 * @param source 与事件相关联来源 {@code ApplicationContext}
 	 */
 	public ContextStartedEvent(ApplicationContext source) {
 		super(source);

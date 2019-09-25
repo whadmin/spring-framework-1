@@ -19,19 +19,14 @@ package org.springframework.context.event;
 import org.springframework.context.ApplicationContext;
 
 /**
- * Event raised when an {@code ApplicationContext} gets closed.
- *
- * @author Juergen Hoeller
- * @since 12.08.2003
- * @see ContextRefreshedEvent
+ * ApplicationContext关闭时引发事件
  */
 @SuppressWarnings("serial")
 public class ContextClosedEvent extends ApplicationContextEvent {
 
 	/**
-	 * Creates a new ContextClosedEvent.
-	 * @param source the {@code ApplicationContext} that has been closed
-	 * (must not be {@code null})
+	 * 创建一个新的 ContextClosedEvent
+	 * @param source 与事件相关联来源 {@code ApplicationContext}
 	 */
 	public ContextClosedEvent(ApplicationContext source) {
 		super(source);
