@@ -43,13 +43,14 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 
 	private final ApplicationListener<ApplicationEvent> delegate;
 
+	/**
+	 * 监听器指定处理的事件 ResolvableType类型
+	 */
 	@Nullable
 	private final ResolvableType declaredEventType;
 
-
 	/**
-	 * Create a new GenericApplicationListener for the given delegate.
-	 * @param delegate the delegate listener to be invoked
+	 * 实例化 GenericApplicationListenerAdapter
 	 */
 	@SuppressWarnings("unchecked")
 	public GenericApplicationListenerAdapter(ApplicationListener<?> delegate) {
@@ -58,41 +59,61 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 		this.declaredEventType = resolveDeclaredEventType(this.delegate);
 	}
 
-
+	/**
+	 * 处理ApplicationEvent 事件。
+	 */
 	@Override
 	public void onApplicationEvent(ApplicationEvent event) {
 		this.delegate.onApplicationEvent(event);
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public boolean supportsEventType(ResolvableType eventType) {
-		if (this.delegate instanceof SmartApplicationListener) {
-			Class<? extends ApplicationEvent> eventClass = (Class<? extends ApplicationEvent>) eventType.resolve();
-			return (eventClass != null && ((SmartApplicationListener) this.delegate).supportsEventType(eventClass));
-		}
-		else {
-			return (this.declaredEventType == null || this.declaredEventType.isAssignableFrom(eventType));
-		}
-	}
 
+	/**
+	 * 确定此侦听器是否实际支持给定的事件类型 ResolvableType
+	 */
 	@Override
 	public boolean supportsEventType(Class<? extends ApplicationEvent> eventType) {
 		return supportsEventType(ResolvableType.forClass(eventType));
 	}
 
+	/**
+	 * 确定此侦听器是否实际支持给定的事件类型 ResolvableType
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public boolean supportsEventType(ResolvableType eventType) {
+		/** 如果delegate代理监听器类型是SmartApplicationListener，获取eventType类型Class对象，调用supportsEventType判断是否支持eventType事件类型 **/
+		if (this.delegate instanceof SmartApplicationListener) {
+			Class<? extends ApplicationEvent> eventClass = (Class<? extends ApplicationEvent>) eventType.resolve();
+			return (eventClass != null && ((SmartApplicationListener) this.delegate).supportsEventType(eventClass));
+		}
+		/** 通过 **/
+		else {
+			return (this.declaredEventType == null || this.declaredEventType.isAssignableFrom(eventType));
+		}
+	}
+
+	/**
+	 * 确定此侦听器是否实际支持给定的源类型 Class
+	 */
 	@Override
 	public boolean supportsSourceType(@Nullable Class<?> sourceType) {
 		return !(this.delegate instanceof SmartApplicationListener) ||
 				((SmartApplicationListener) this.delegate).supportsSourceType(sourceType);
 	}
 
+	/**
+	 * 获取监听器优先级
+	 */
 	@Override
 	public int getOrder() {
 		return (this.delegate instanceof Ordered ? ((Ordered) this.delegate).getOrder() : Ordered.LOWEST_PRECEDENCE);
 	}
 
 
+	/**
+	 * 获取listener监听器指定父类ApplicationListener泛型对应ResolvableType类型
+	 */
 	@Nullable
 	private static ResolvableType resolveDeclaredEventType(ApplicationListener<ApplicationEvent> listener) {
 		ResolvableType declaredEventType = resolveDeclaredEventType(listener.getClass());
@@ -105,6 +126,9 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 		return declaredEventType;
 	}
 
+	/**
+	 * 获取Class指定父类ApplicationListener泛型对应ResolvableType类型
+	 */
 	@Nullable
 	static ResolvableType resolveDeclaredEventType(Class<?> listenerType) {
 		ResolvableType eventType = eventTypeCache.get(listenerType);

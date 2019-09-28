@@ -30,8 +30,7 @@ import org.springframework.expression.Expression;
 import org.springframework.lang.Nullable;
 
 /**
- * Utility class for handling SpEL expression parsing for application events.
- * <p>Meant to be used as a reusable, thread-safe component.
+ * 处理应用程序事件的SpEL表达式解析
  *
  * @author Stephane Nicoll
  * @since 4.2
@@ -41,10 +40,8 @@ class EventExpressionEvaluator extends CachedExpressionEvaluator {
 
 	private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(64);
 
-
 	/**
-	 * Determine if the condition defined by the specified expression evaluates
-	 * to {@code true}.
+	 * 确定指定表达式定义的条件的求值是否为{@code true}。
 	 */
 	public boolean condition(String conditionExpression, ApplicationEvent event, Method targetMethod,
 			AnnotatedElementKey methodKey, Object[] args, @Nullable BeanFactory beanFactory) {

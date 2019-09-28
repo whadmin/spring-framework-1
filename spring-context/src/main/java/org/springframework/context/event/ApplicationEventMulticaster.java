@@ -22,17 +22,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
- * Interface to be implemented by objects that can manage a number of
- * {@link ApplicationListener} objects and publish events to them.
- *
- * <p>An {@link org.springframework.context.ApplicationEventPublisher}, typically
- * a Spring {@link org.springframework.context.ApplicationContext}, can use an
- * {@code ApplicationEventMulticaster} as a delegate for actually publishing events.
- *
- * @author Rod Johnson
- * @author Juergen Hoeller
- * @author Stephane Nicoll
- * @see ApplicationListener
+ * 管理多个{@link ApplicationListener}监听器并向其发布 ApplicationEvent 事件
  */
 public interface ApplicationEventMulticaster {
 
@@ -62,20 +52,12 @@ public interface ApplicationEventMulticaster {
 	void removeAllListeners();
 
 	/**
-	 * Multicast the given application event to appropriate listeners.
-	 * <p>Consider using {@link #multicastEvent(ApplicationEvent, ResolvableType)}
-	 * if possible as it provides better support for generics-based events.
-	 * @param event the event to multicast
+	 * 多播 ApplicationEvent 事件给注册的监听器
 	 */
 	void multicastEvent(ApplicationEvent event);
 
 	/**
-	 * Multicast the given application event to appropriate listeners.
-	 * <p>If the {@code eventType} is {@code null}, a default type is built
-	 * based on the {@code event} instance.
-	 * @param event the event to multicast
-	 * @param eventType the type of event (can be {@code null})
-	 * @since 4.2
+	 * 多播 ApplicationEvent 事件给注册的监听器
 	 */
 	void multicastEvent(ApplicationEvent event, @Nullable ResolvableType eventType);
 

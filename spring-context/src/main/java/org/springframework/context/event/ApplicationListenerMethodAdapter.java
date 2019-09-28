@@ -51,18 +51,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.concurrent.ListenableFuture;
 
 /**
- * {@link GenericApplicationListener} adapter that delegates the processing of
- * an event to an {@link EventListener} annotated method.
- *
- * <p>Delegates to {@link #processEvent(ApplicationEvent)} to give subclasses
- * a chance to deviate from the default. Unwraps the content of a
- * {@link PayloadApplicationEvent} if necessary to allow a method declaration
- * to define any arbitrary event type. If a condition is defined, it is
- * evaluated prior to invoking the underlying method.
- *
- * @author Stephane Nicoll
- * @author Juergen Hoeller
- * @author Sam Brannen
+ * {@link GenericApplicationListener}适配器，将事件的处理委派给{@link EventListener}注释的方法。
  * @since 4.2
  */
 public class ApplicationListenerMethodAdapter implements GenericApplicationListener {
@@ -73,48 +62,127 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * bean名称
+	 */
 	private final String beanName;
 
+	/**
+	 * 被@EventListener注解 Method对象
+	 */
 	private final Method method;
 
+	/**
+	 * 目标方法，一般和method属性值相同，
+	 * 当@EventListener作用于AOP代理类上，则targetMethod表示真正处理方法
+	 */
 	private final Method targetMethod;
 
+	/**
+	 * 唯一标识@EventListener来源的 Class 以及 method
+	 */
 	private final AnnotatedElementKey methodKey;
 
+	/**
+	 * 监听器支持的事件类型
+	 *
+	 * 1 优先从@EventListener注解classes属性获取监听器支持的事件类型 用ResolvableType类型来表示
+	 *
+	 *   例如
+	 *   @EventListener({String.class, Integer.class})表示支持事件类型为String.class 或者 Integer.class
+	 *
+	 * 2 从method方法第一个参数获取事件，用ResolvableType类型来表示
+	 *
+	 *   如果方法的第一个参数T Class不是ApplicationEvent或者其子类。
+	 *   在触发事件时内部会转换成PayloadApplicationEvent<T>
+	 *
+	 *   例如
+	 *   @EventListener
+	 *   public void handleString(String payload)
+	 *   表示支持事件类型为 PayloadApplicationEvent<String>，PayloadApplicationEvent，PayloadApplicationEvent子类
+	 *
+	 *   如果方法的第一个参数T Class是ApplicationEvent或者其子类。
+	 *   在触发事件时事件为其本身
+	 *
+	 *   表示支持事件类型为
+	 *   @EventListener
+	 *   public void handleRaw(ApplicationEvent event)
+	 *   表示支持事件类型为 ApplicationEvent 事件
+	 *   表示支持事件类型为 GenericTestEvent<String> extends ApplicationEvent 事件
+	 *
+	 *   表示支持事件类型为
+	 *   @EventListener
+	 *   public void handleGenericString(ApplicationListenerMethodAdapterTests.GenericTestEvent<String> event)
+	 *   表示支持事件类型为 ApplicationListenerMethodAdapterTests.GenericTestEvent<String>
+	 *
+	 *
+	 */
 	private final List<ResolvableType> declaredEventTypes;
 
-	@Nullable
-	private final String condition;
-
+	/**
+	 * 优先级
+	 */
 	private final int order;
 
+	/**
+	 * 应用程序上下文
+	 */
 	@Nullable
 	private ApplicationContext applicationContext;
 
+	/**
+	 * 处理应用程序事件的SpEL表达式解析,这里主要处理condition表达式
+	 */
 	@Nullable
 	private EventExpressionEvaluator evaluator;
 
+	/**
+	 * 标识@EventListener 表达式
+	 */
+	@Nullable
+	private final String condition;
 
+
+	/**
+	 * 实例化
+	 */
 	public ApplicationListenerMethodAdapter(String beanName, Class<?> targetClass, Method method) {
+		/**  设置beanName **/
 		this.beanName = beanName;
+		/** 获取method桥接方法 **/
 		this.method = BridgeMethodResolver.findBridgedMethod(method);
+		/**  获取并设置targetMethod **/
 		this.targetMethod = (!Proxy.isProxyClass(targetClass) ?
 				AopUtils.getMostSpecificMethod(method, targetClass) : this.method);
+		/**  设置methodKey **/
 		this.methodKey = new AnnotatedElementKey(this.targetMethod, targetClass);
 
+		/**  获取@EventListener 注解对象 **/
 		EventListener ann = AnnotatedElementUtils.findMergedAnnotation(this.targetMethod, EventListener.class);
+
+		/**  从method方法第一个参数或@EventListener注解classes属性中获取事件的ResolvableType类型**/
 		this.declaredEventTypes = resolveDeclaredEventTypes(method, ann);
+
+		/**  从@EventListener注解condition属性获取SpEL表达式**/
 		this.condition = (ann != null ? ann.condition() : null);
+
+		/**  从Order.class注解获取value属性，用来表示优先级别 **/
 		this.order = resolveOrder(this.targetMethod);
 	}
 
+	/**
+	 * 从method方法参数和@EventListener注解classes属性中获取事件的ResolvableType类型
+	 */
 	private static List<ResolvableType> resolveDeclaredEventTypes(Method method, @Nullable EventListener ann) {
+
+		/** 1 @EventListener注解定义的方法参数只能一个 **/
 		int count = method.getParameterCount();
 		if (count > 1) {
 			throw new IllegalStateException(
 					"Maximum one parameter is allowed for event listener method: " + method);
 		}
 
+		/** 2 优先从@EventListener注解classes属性中获取事件的ResolvableType类型 **/
 		if (ann != null) {
 			Class<?>[] classes = ann.classes();
 			if (classes.length > 0) {
@@ -126,6 +194,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 			}
 		}
 
+		/** 3 从method方法第一个参数获取事件的ResolvableType类型 **/
 		if (count == 0) {
 			throw new IllegalStateException(
 					"Event parameter is mandatory for event listener method: " + method);
@@ -133,6 +202,9 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		return Collections.singletonList(ResolvableType.forMethodParameter(method, 0));
 	}
 
+	/**
+	 * 从Order.class注解获取value属性，用来表示优先级别
+	 */
 	private static int resolveOrder(Method method) {
 		Order ann = AnnotatedElementUtils.findMergedAnnotation(method, Order.class);
 		return (ann != null ? ann.value() : 0);
@@ -140,7 +212,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 
 
 	/**
-	 * Initialize this instance.
+	 * 初始化ApplicationListenerMethodAdapter，设置applicationContext，evaluator
 	 */
 	void init(ApplicationContext applicationContext, EventExpressionEvaluator evaluator) {
 		this.applicationContext = applicationContext;
@@ -148,17 +220,37 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	}
 
 
-	@Override
-	public void onApplicationEvent(ApplicationEvent event) {
-		processEvent(event);
-	}
 
+
+	/**
+	 * 确定此侦听器是否实际支持给定的事件,事件类型用 ResolvableType 表示
+	 */
 	@Override
 	public boolean supportsEventType(ResolvableType eventType) {
 		for (ResolvableType declaredEventType : this.declaredEventTypes) {
+			/**
+			 * 如果declaredEventType 表示类型为 ApplicationEvent
+			 *
+			 * 例如
+			 *  @EventListener
+			 * 	public void handleRaw(ApplicationEvent event)
+			 *
+			 * **/
 			if (declaredEventType.isAssignableFrom(eventType)) {
 				return true;
 			}
+			/**
+			 * 如果declaredEventType 表示类型为 非ApplicationEvent
+			 *
+			 * 例如
+			 * @EventListener({String.class, Integer.class})
+			 * 或者
+			 * @EventListener
+			 * public void handleRaw(ApplicationEvent event)
+			 *
+			 * 从触发事件定义的泛型来匹配
+			 *
+			 * **/
 			if (PayloadApplicationEvent.class.isAssignableFrom(eventType.toClass())) {
 				ResolvableType payloadType = eventType.as(PayloadApplicationEvent.class).getGeneric();
 				if (declaredEventType.isAssignableFrom(payloadType)) {
@@ -166,14 +258,21 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 				}
 			}
 		}
+		/** 判断触发事件是否存在泛型  **/
 		return eventType.hasUnresolvableGenerics();
 	}
 
+	/**
+	 * 确定此侦听器是否实际支持给定的源类型
+	 */
 	@Override
 	public boolean supportsSourceType(@Nullable Class<?> sourceType) {
 		return true;
 	}
 
+	/**
+	 * 返回监听器的优先级
+	 */
 	@Override
 	public int getOrder() {
 		return this.order;
@@ -181,12 +280,23 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 
 
 	/**
-	 * Process the specified {@link ApplicationEvent}, checking if the condition
-	 * matches and handling a non-null result, if any.
+	 * 处理 ApplicationEvent 事件。
+	 */
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		processEvent(event);
+	}
+
+
+	/**
+	 * 处理事件
 	 */
 	public void processEvent(ApplicationEvent event) {
+		/** 解析ApplicationEvent，获取处理方法的参数 **/
 		Object[] args = resolveArguments(event);
+		/** 判断是否满足 condition 表达式 **/
 		if (shouldHandle(event, args)) {
+			/** 使用给定的参数值调用事件侦听器方法。 **/
 			Object result = doInvoke(args);
 			if (result != null) {
 				handleResult(result);
@@ -198,13 +308,19 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	}
 
 	/**
-	 * Resolve the method arguments to use for the specified {@link ApplicationEvent}.
-	 * <p>These arguments will be used to invoke the method handled by this instance.
-	 * Can return {@code null} to indicate that no suitable arguments could be resolved
-	 * and therefore the method should not be invoked at all for the specified event.
+	 * 解析ApplicationEvent， 获取处理方法的参数
+	 *
+	 * 对于事件类型为 PayloadApplicationEvent 事件，获取负载事件对象
+	 * 对于事件类型为 ApplicationEvent 事件 返回本身
+	 *
 	 */
 	@Nullable
 	protected Object[] resolveArguments(ApplicationEvent event) {
+		/**
+		 * 解析事件或是ApplicationEvent 事件 ResolvableType 类型
+		 * 对于事件类型为 PayloadApplicationEvent<E> 事件 返回泛型E对应 ResolvableType 类型
+		 * 对于事件类型为 ApplicationEvent 事件 返回ApplicationEventd对象对应  ResolvableType 类型
+		 * **/
 		ResolvableType declaredEventType = getResolvableType(event);
 		if (declaredEventType == null) {
 			return null;
@@ -290,7 +406,7 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 	}
 
 	/**
-	 * Invoke the event listener method with the given argument values.
+	 * 使用给定的参数值调用事件侦听器方法。
 	 */
 	@Nullable
 	protected Object doInvoke(Object... args) {
@@ -386,6 +502,9 @@ public class ApplicationListenerMethodAdapter implements GenericApplicationListe
 		return sb.toString();
 	}
 
+	/**
+	 * 解析事件或是ApplicationEvent 事件 ResolvableType 类型
+	 */
 	@Nullable
 	private ResolvableType getResolvableType(ApplicationEvent event) {
 		ResolvableType payloadType = null;
