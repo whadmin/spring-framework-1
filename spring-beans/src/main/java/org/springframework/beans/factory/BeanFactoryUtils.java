@@ -61,22 +61,15 @@ public abstract class BeanFactoryUtils {
 
 
 	/**
-	 * Return whether the given name is a factory dereference
-	 * (beginning with the factory dereference prefix).
-	 * @param name the name of the bean
-	 * @return whether the given name is a factory dereference
-	 * @see BeanFactory#FACTORY_BEAN_PREFIX
+	 * 返回bean名称是否存在 BeanFactory#FACTORY_BEAN_PREFIX前缀，来表示当前bean class类型为BeanFactory
+	 * @param name bean 名称
 	 */
 	public static boolean isFactoryDereference(@Nullable String name) {
 		return (name != null && name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
 	}
 
 	/**
-	 * Return the actual bean name, stripping out the factory dereference
-	 * prefix (if any, also stripping repeated factory prefixes if found).
-	 * @param name the name of the bean
-	 * @return the transformed name
-	 * @see BeanFactory#FACTORY_BEAN_PREFIX
+	 * 返回实际的bean名称，剥离BeanFactory.FACTORY_BEAN_PREFIX
 	 */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");
