@@ -82,23 +82,30 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
 		/** 判断FactoryBean管理的对象是否是单例，且beanName存在单例bean对象的高速缓存中 **/
 		if (factory.isSingleton() && containsSingleton(beanName)) {
+			/** 来锁定singletonObjects这个集合 **/
 			synchronized (getSingletonMutex()) {
+				/** 通过 beanName 从factoryBeanObjectCache 缓存(通过FactoryBeans创建的单例bean的缓存) 获取 object **/
 				Object object = this.factoryBeanObjectCache.get(beanName);
+				/** 如果缓存中不存在 **/
 				if (object == null) {
+					/** 从FactoryBean获取管理实例  **/
 					object = doGetObjectFromFactoryBean(factory, beanName);
-					// Only post-process and store if not put there already during getObject() call above
-					// (e.g. because of circular reference processing triggered by custom getBean calls)
+					/**
+					 * 因为有可能在调用doGetObjectFromFactoryBean的过程中,该Bean被放到了factoryBeanObjectCache中,
+					 * 所以需要再次校验,通过 beanName 从factoryBeanObjectCache 缓存 获取 object,果此时发现缓存中已经有了,那就直接返回 **/
 					Object alreadyThere = this.factoryBeanObjectCache.get(beanName);
 					if (alreadyThere != null) {
 						object = alreadyThere;
 					}
 					else {
+						/** 是否需要在获取FactoryBean管理的对象后进行后置处理 **/
 						if (shouldPostProcess) {
 							if (isSingletonCurrentlyInCreation(beanName)) {
-								// Temporarily return non-post-processed object, not storing it yet..
 								return object;
 							}
 							beforeSingletonCreation(beanName);
+
+							/**  模板方法，用来对factoryBean拿到object后对其后置处理逻辑 AbstractAutowireCapableBeanFactory对其进行覆盖实现 **/
 							try {
 								object = postProcessObjectFromFactoryBean(object, beanName);
 							}
@@ -124,7 +131,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 			/** 是否需要在获取FactoryBean管理的对象后进行后置处理 **/
 			if (shouldPostProcess) {
 				try {
-					/**  这里是一个模板方法，AbstractAutowireCapableBeanFactory对其进行覆盖实现 **/
+					/**  模板方法，用来对factoryBean拿到object后对其后置处理逻辑 AbstractAutowireCapableBeanFactory对其进行覆盖实现 **/
 					object = postProcessObjectFromFactoryBean(object, beanName);
 				}
 				catch (Throwable ex) {
@@ -176,18 +183,15 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	}
 
 	/**
-	 * 使用FactoryBean调用
+	 * 模板方法，用来对factoryBean拿到object后对其后置处理逻辑，
+	 * AbstractAutowireCapableBeanFactory对进行实现。
 	 */
 	protected Object postProcessObjectFromFactoryBean(Object object, String beanName) throws BeansException {
 		return object;
 	}
 
 	/**
-	 * Get a FactoryBean for the given bean if possible.
-	 * @param beanName the name of the bean
-	 * @param beanInstance the corresponding bean instance
-	 * @return the bean instance as FactoryBean
-	 * @throws BeansException if the given bean cannot be exposed as a FactoryBean
+	 * 如果beanInstance类型FactoryBean，将强制转换(FactoryBean<?>) beanInstance返回
 	 */
 	protected FactoryBean<?> getFactoryBean(String beanName, Object beanInstance) throws BeansException {
 		if (!(beanInstance instanceof FactoryBean)) {
@@ -198,7 +202,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	}
 
 	/**
-	 * Overridden to clear the FactoryBean object cache as well.
+	 * 清理指定beanName单实例缓存
 	 */
 	@Override
 	protected void removeSingleton(String beanName) {
@@ -220,10 +224,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	}
 
 	/**
-	 * Return the security context for this bean factory. If a security manager
-	 * is set, interaction with the user code will be executed using the privileged
-	 * of the security context returned by this method.
-	 * @see AccessController#getContext()
+	 * 获取AccessControlContext
 	 */
 	protected AccessControlContext getAccessControlContext() {
 		return AccessController.getContext();

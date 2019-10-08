@@ -162,15 +162,21 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * Register request/session scopes, a {@link ServletContextAwareProcessor}, etc.
+	 * 对于WEB环境 ApplicationContext 在刷新时做特殊处理
 	 */
 	@Override
 	protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+		/**
+		 * 注册BeanPostProcessor 实现类ServletContextAwareProcessor 给beanFactory，负责在bean初始化前判断是否实现ServletContextAware，ServletConfigAware
+		 * 如果实现调用实现接口方法将ServletContext，ServletConfig设置给bean **/
 		beanFactory.addBeanPostProcessor(new ServletContextAwareProcessor(this.servletContext, this.servletConfig));
+		/** 设置忽略自动装配的接口 **/
 		beanFactory.ignoreDependencyInterface(ServletContextAware.class);
 		beanFactory.ignoreDependencyInterface(ServletConfigAware.class);
 
+		/** 将WEB环境特定的域（scope）处理类注册到beanFactory中 **/
 		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory, this.servletContext);
+		/** 将WEB环境特定对象ServletContext,ServletConfig信息注册到BeanFactory中**/
 		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory, this.servletContext, this.servletConfig);
 	}
 

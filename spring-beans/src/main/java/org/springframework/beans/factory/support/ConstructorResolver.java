@@ -67,6 +67,7 @@ import org.springframework.util.StringUtils;
 /**
  * Delegate for resolving constructors and factory methods.
  * <p>Performs constructor resolution through argument matching.
+ * 通过参数匹配执行构造函数解析。
  *
  * @author Juergen Hoeller
  * @author Rob Harrop
@@ -132,6 +133,7 @@ class ConstructorResolver {
 		ArgumentsHolder argsHolderToUse = null;
 		Object[] argsToUse = null;
 
+		/** 如果getBean中传入的参数不为空，那么就使用传入的参数 **/
 		if (explicitArgs != null) {
 			argsToUse = explicitArgs;
 		}
