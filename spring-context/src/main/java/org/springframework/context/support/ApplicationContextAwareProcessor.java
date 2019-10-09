@@ -34,23 +34,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringValueResolver;
 
 /**
- * {@link BeanPostProcessor} implementation that supplies the {@code ApplicationContext},
- * {@link org.springframework.core.env.Environment Environment}, or
- * {@link StringValueResolver} for the {@code ApplicationContext} to beans that
- * implement the {@link EnvironmentAware}, {@link EmbeddedValueResolverAware},
- * {@link ResourceLoaderAware}, {@link ApplicationEventPublisherAware},
- * {@link MessageSourceAware}, and/or {@link ApplicationContextAware} interfaces.
- *
- * <p>Implemented interfaces are satisfied in the order in which they are
- * mentioned above.
- *
- * <p>Application contexts will automatically register this with their
- * underlying bean factory. Applications do not use this directly.
- *
- * @author Juergen Hoeller
- * @author Costin Leau
- * @author Chris Beams
- * @since 10.10.2003
+ *{@link BeanPostProcessor}一种实现，该实现将ApplicationContext特征的组件传递给实现XXXAware接口的bean。
  * @see org.springframework.context.EnvironmentAware
  * @see org.springframework.context.EmbeddedValueResolverAware
  * @see org.springframework.context.ResourceLoaderAware
@@ -67,7 +51,7 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 
 
 	/**
-	 * Create a new ApplicationContextAwareProcessor for the given context.
+	 * 为给定上下文创建一个新的ApplicationContextAwareProcessor。
 	 */
 	public ApplicationContextAwareProcessor(ConfigurableApplicationContext applicationContext) {
 		this.applicationContext = applicationContext;
@@ -75,15 +59,20 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 	}
 
 
+	/**
+	 * bean初始化前回调
+	 */
 	@Override
 	@Nullable
 	public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+		/** 判断bean对象是否实现XXXAware 接口 **/
 		if (!(bean instanceof EnvironmentAware || bean instanceof EmbeddedValueResolverAware ||
 				bean instanceof ResourceLoaderAware || bean instanceof ApplicationEventPublisherAware ||
 				bean instanceof MessageSourceAware || bean instanceof ApplicationContextAware)){
 			return bean;
 		}
 
+		/** 解析Bean类型，调用Aware接口方法 **/
 		AccessControlContext acc = null;
 
 		if (System.getSecurityManager() != null) {
@@ -103,6 +92,9 @@ class ApplicationContextAwareProcessor implements BeanPostProcessor {
 		return bean;
 	}
 
+	/**
+	 * 解析Bean类型，调用Aware接口方法
+	 */
 	private void invokeAwareInterfaces(Object bean) {
 		if (bean instanceof EnvironmentAware) {
 			((EnvironmentAware) bean).setEnvironment(this.applicationContext.getEnvironment());

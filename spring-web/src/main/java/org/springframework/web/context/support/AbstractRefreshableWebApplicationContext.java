@@ -53,35 +53,44 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	private ServletConfig servletConfig;
 
 
-	/** ApplicationContext的命名空间，如果为root，则为{@code null}。 */
+	/** 命名空间，如果为root，则为{@code null}。 */
 	@Nullable
 	private String namespace;
 
 
-	/** ApplicationContext的ThemeSource。 */
+	/** 主题功能组件 */
 	@Nullable
 	private ThemeSource themeSource;
 
 
 	/**
-	 *
+	 * 实例化AbstractRefreshableWebApplicationContext
 	 */
 	public AbstractRefreshableWebApplicationContext() {
 		setDisplayName("Root WebApplicationContext");
 	}
 
 
+	/**
+	 * 设置ServletContext
+	 */
 	@Override
 	public void setServletContext(@Nullable ServletContext servletContext) {
 		this.servletContext = servletContext;
 	}
 
+	/**
+	 * 获取ServletContext
+	 */
 	@Override
 	@Nullable
 	public ServletContext getServletContext() {
 		return this.servletContext;
 	}
 
+	/**
+	 * 设置ServletConfig
+	 */
 	@Override
 	public void setServletConfig(@Nullable ServletConfig servletConfig) {
 		this.servletConfig = servletConfig;
@@ -90,12 +99,18 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 		}
 	}
 
+	/**
+	 * 获取ServletConfig
+	 */
 	@Override
 	@Nullable
 	public ServletConfig getServletConfig() {
 		return this.servletConfig;
 	}
 
+	/**
+	 * 设置命名空间
+	 */
 	@Override
 	public void setNamespace(@Nullable String namespace) {
 		this.namespace = namespace;
@@ -104,17 +119,26 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 		}
 	}
 
+	/**
+	 * 返回命名空间
+	 */
 	@Override
 	@Nullable
 	public String getNamespace() {
 		return this.namespace;
 	}
 
+	/**
+	 * 返回资源配置文件数组
+	 */
 	@Override
 	public String[] getConfigLocations() {
 		return super.getConfigLocations();
 	}
 
+	/**
+	 * 返回应用名称
+	 */
 	@Override
 	public String getApplicationName() {
 		return (this.servletContext != null ? this.servletContext.getContextPath() : "");
@@ -129,7 +153,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * 对于WEB环境 ApplicationContext 在刷新时做特殊处理
+	 * 重写父类方法，对于WEB环境 ApplicationContext内部BeanFactory做特殊处理
 	 */
 	@Override
 	protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
@@ -144,6 +168,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 
 		/** 将WEB环境特定的域（scope）处理类注册到beanFactory中 **/
 		WebApplicationContextUtils.registerWebApplicationScopes(beanFactory, this.servletContext);
+
 		/** 将WEB环境特定对象ServletContext,ServletConfig信息注册到BeanFactory中**/
 		WebApplicationContextUtils.registerEnvironmentBeans(beanFactory, this.servletContext, this.servletConfig);
 	}
@@ -158,8 +183,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * This implementation supports pattern matching in unexpanded WARs too.
-	 * @see ServletContextResourcePatternResolver
+	 * 获取ServletContext根目录 资源模式解析器
 	 */
 	@Override
 	protected ResourcePatternResolver getResourcePatternResolver() {
@@ -167,7 +191,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * Initialize the theme capability.
+	 * 重写父类方法，初始化主题功能组件。
 	 */
 	@Override
 	protected void onRefresh() {
@@ -175,6 +199,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
+	 * 重写父类方法 初始化PropertySources
 	 * 新建Environment，如果类型ConfigurableWebEnvironment则调用initPropertySources初始化
 	 */
 	@Override
@@ -185,6 +210,9 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 		}
 	}
 
+	/**
+	 * 返回主题功能组件themeSource
+	 */
 	@Override
 	@Nullable
 	public Theme getTheme(String themeName) {

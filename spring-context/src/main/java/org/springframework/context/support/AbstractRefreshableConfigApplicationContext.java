@@ -39,6 +39,9 @@ import org.springframework.util.StringUtils;
 public abstract class AbstractRefreshableConfigApplicationContext extends AbstractRefreshableApplicationContext
 		implements BeanNameAware, InitializingBean {
 
+	/**
+	 * 配置文件路径数组
+	 */
 	@Nullable
 	private String[] configLocations;
 
@@ -46,14 +49,13 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 
 
 	/**
-	 * Create a new AbstractRefreshableConfigApplicationContext with no parent.
+	 * 创建一个没有父级的新AbstractRefreshableConfigApplicationContext。
 	 */
 	public AbstractRefreshableConfigApplicationContext() {
 	}
 
 	/**
-	 * Create a new AbstractRefreshableConfigApplicationContext with the given parent context.
-	 * @param parent the parent context
+	 * 使用给定的父上下文创建一个新的AbstractRefreshableConfigApplicationContext。
 	 */
 	public AbstractRefreshableConfigApplicationContext(@Nullable ApplicationContext parent) {
 		super(parent);
@@ -61,17 +63,14 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 
 
 	/**
-	 * Set the config locations for this application context in init-param style,
-	 * i.e. with distinct locations separated by commas, semicolons or whitespace.
-	 * <p>If not set, the implementation may use a default as appropriate.
+	 * 设置此ApplicationContext的配置文件路径，多个路径可以通过CONFIG_LOCATION_DELIMITERS隔开
 	 */
 	public void setConfigLocation(String location) {
 		setConfigLocations(StringUtils.tokenizeToStringArray(location, CONFIG_LOCATION_DELIMITERS));
 	}
 
 	/**
-	 * Set the config locations for this application context.
-	 * <p>If not set, the implementation may use a default as appropriate.
+	 * 设置此ApplicationContext的配置文件路径
 	 */
 	public void setConfigLocations(@Nullable String... locations) {
 		if (locations != null) {
@@ -87,14 +86,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
-	 * Return an array of resource locations, referring to the XML bean definition
-	 * files that this context should be built with. Can also include location
-	 * patterns, which will get resolved via a ResourcePatternResolver.
-	 * <p>The default implementation returns {@code null}. Subclasses can override
-	 * this to provide a set of resource locations to load bean definitions from.
-	 * @return an array of resource locations, or {@code null} if none
-	 * @see #getResources
-	 * @see #getResourcePatternResolver
+	 * 获取配置文件路径数组，如果不存在调用getDefaultConfigLocations()获取默认值
 	 */
 	@Nullable
 	protected String[] getConfigLocations() {
@@ -102,12 +94,8 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
-	 * Return the default config locations to use, for the case where no
-	 * explicit config locations have been specified.
-	 * <p>The default implementation returns {@code null},
-	 * requiring explicit config locations.
-	 * @return an array of default config locations, if any
-	 * @see #setConfigLocations
+	 * 对于未指定显式配置路径的情况，返回要使用的默认配置路径。
+	 * 默认实现返回{@code null}，需要明确的配置位置。
 	 */
 	@Nullable
 	protected String[] getDefaultConfigLocations() {
@@ -115,10 +103,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
-	 * Resolve the given path, replacing placeholders with corresponding
-	 * environment property values if necessary. Applied to config locations.
-	 * @param path the original file path
-	 * @return the resolved file path
+	 * 解析给定的路径，必要时用相应的环境属性值替换占位符。, 应用于配置位置。
 	 * @see org.springframework.core.env.Environment#resolveRequiredPlaceholders(String)
 	 */
 	protected String resolvePath(String path) {
@@ -126,6 +111,9 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 
+	/**
+	 * 设置唯一ID
+	 */
 	@Override
 	public void setId(String id) {
 		super.setId(id);
@@ -133,8 +121,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
-	 * Sets the id of this context to the bean name by default,
-	 * for cases where the context instance is itself defined as a bean.
+	 * 默认情况下将此上下文的ID设置为Bean名称。
 	 */
 	@Override
 	public void setBeanName(String name) {
@@ -145,8 +132,7 @@ public abstract class AbstractRefreshableConfigApplicationContext extends Abstra
 	}
 
 	/**
-	 * Triggers {@link #refresh()} if not refreshed in the concrete context's
-	 * constructor already.
+	 * 初始化方法，如果当前未处于活动状态，则触发{@link #refresh（）}。
 	 */
 	@Override
 	public void afterPropertiesSet() {
