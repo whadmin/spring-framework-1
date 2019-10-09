@@ -493,37 +493,28 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				/** 模板方法，默认实现为空，子类实现扩展beanFactory功能 **/
 				postProcessBeanFactory(beanFactory);
 
-				/**
-				 * 执行beanFactory中管理BeanFactoryPostProcessor对象postProcessBeanFactory方法，这里管理的BeanFactoryPostProcessor包括
-				 * 		  1 手动注册到ApplicationContext
-				 * 		  2 beanFactory内部管理类型为BeanFactoryPostProcessor bean对象
-				 */
+				/**  执行beanFactory中管理BeanFactoryPostProcessor对象postProcessBeanFactory方法，**/
 				invokeBeanFactoryPostProcessors(beanFactory);
 
-				/**
-				 * 将BeanPostProcessor按照顺序注册到BeanFactory,其中包括
-				 * 1 BeanPostProcessorChecker,
-				 * 2 从beanFactory获取类型为BeanPostProcessor bean实例
-				 * 3 ApplicationListenerDetector
-				 */
+				/** 将BeanPostProcessor按照顺序注册到BeanFactory **/
 				registerBeanPostProcessors(beanFactory);
 
-				// Initialize message source for this context.
+				/** 初始化 MessageSource **/
 				initMessageSource();
 
-				// Initialize event multicaster for this context.
+				/** 初始化 ApplicationEventMulticaster. **/
 				initApplicationEventMulticaster();
 
-				// Initialize other special beans in specific context subclasses.
+				/** 模板方法,空实现，子类扩展以添加特定于上下文的刷新工作。 **/
 				onRefresh();
 
-				// Check for listener beans and register them.
+				/** 检查侦听器bean并注册它们。 **/
 				registerListeners();
 
-				// Instantiate all remaining (non-lazy-init) singletons.
+				/** 完成此上下文的bean工厂的初始化，初始化所有剩余的单例bean。 **/
 				finishBeanFactoryInitialization(beanFactory);
 
-				// Last step: publish corresponding event.
+				/** 完成此上下文的刷新 **/
 				finishRefresh();
 			}
 
@@ -533,19 +524,18 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 							"cancelling refresh attempt: " + ex);
 				}
 
-				// Destroy already created singletons to avoid dangling resources.
+				/**   销毁ApplicationContext管理所有Bean实例，默认实现销毁此上下文中所有缓存的单例 **/
 				destroyBeans();
 
-				// Reset 'active' flag.
+				/** 取消applicationContext刷新功能 **/
 				cancelRefresh(ex);
 
-				// Propagate exception to caller.
+				/** 抛出异常 **/
 				throw ex;
 			}
 
 			finally {
-				// Reset common introspection caches in Spring's core, since we
-				// might not ever need metadata for singleton beans anymore...
+				/** 重置Spring的通用反射元数据缓存 **/
 				resetCommonCaches();
 			}
 		}
@@ -709,19 +699,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Initialize the MessageSource.
-	 * Use parent's if none defined in this context.
+	 * 初始化 MessageSource.
 	 */
 	protected void initMessageSource() {
 		ConfigurableListableBeanFactory beanFactory = getBeanFactory();
 		if (beanFactory.containsLocalBean(MESSAGE_SOURCE_BEAN_NAME)) {
 			this.messageSource = beanFactory.getBean(MESSAGE_SOURCE_BEAN_NAME, MessageSource.class);
-			// Make MessageSource aware of parent MessageSource.
 			if (this.parent != null && this.messageSource instanceof HierarchicalMessageSource) {
 				HierarchicalMessageSource hms = (HierarchicalMessageSource) this.messageSource;
 				if (hms.getParentMessageSource() == null) {
-					// Only set parent context as parent MessageSource if no parent MessageSource
-					// registered already.
 					hms.setParentMessageSource(getInternalParentMessageSource());
 				}
 			}
@@ -730,7 +716,6 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 			}
 		}
 		else {
-			// Use empty MessageSource to be able to accept getMessage calls.
 			DelegatingMessageSource dms = new DelegatingMessageSource();
 			dms.setParentMessageSource(getInternalParentMessageSource());
 			this.messageSource = dms;
@@ -742,8 +727,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Initialize the ApplicationEventMulticaster.
-	 * Uses SimpleApplicationEventMulticaster if none defined in the context.
+	 * 初始化 ApplicationEventMulticaster.
 	 * @see org.springframework.context.event.SimpleApplicationEventMulticaster
 	 */
 	protected void initApplicationEventMulticaster() {
@@ -766,8 +750,8 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Initialize the LifecycleProcessor.
-	 * Uses DefaultLifecycleProcessor if none defined in the context.
+	 * 初始化 LifecycleProcessor.
+	 * 如果上下文中未定义，则使用DefaultLifecycleProcessor。
 	 * @see org.springframework.context.support.DefaultLifecycleProcessor
 	 */
 	protected void initLifecycleProcessor() {
@@ -792,34 +776,27 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Template method which can be overridden to add context-specific refresh work.
-	 * Called on initialization of special beans, before instantiation of singletons.
-	 * <p>This implementation is empty.
-	 * @throws BeansException in case of errors
-	 * @see #refresh()
+	 * 模板方法,空实现，子类扩展以添加特定于上下文的刷新工作。 ,
 	 */
 	protected void onRefresh() throws BeansException {
-		// For subclasses: do nothing by default.
 	}
 
 	/**
-	 * Add beans that implement ApplicationListener as listeners.
-	 * Doesn't affect other listeners, which can be added without being beans.
+	 * 检查侦听器bean并注册它们。
 	 */
 	protected void registerListeners() {
-		// Register statically specified listeners first.
+		/** 将设置静态指定的侦听器注册到事件多播器 */
 		for (ApplicationListener<?> listener : getApplicationListeners()) {
 			getApplicationEventMulticaster().addApplicationListener(listener);
 		}
 
-		// Do not initialize FactoryBeans here: We need to leave all regular beans
-		// uninitialized to let post-processors apply to them!
+		/** 获取Bean中类型为ApplicationListener Bean实例 注册到事件多播器 **/
 		String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
 		for (String listenerBeanName : listenerBeanNames) {
 			getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
 		}
 
-		// Publish early application events now that we finally have a multicaster...
+		/** 使用多播器，发布刷新前触发的应用事件。 **/
 		Set<ApplicationEvent> earlyEventsToProcess = this.earlyApplicationEvents;
 		this.earlyApplicationEvents = null;
 		if (earlyEventsToProcess != null) {
@@ -830,73 +807,66 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 	/**
-	 * Finish the initialization of this context's bean factory,
-	 * initializing all remaining singleton beans.
+	 * 完成此上下文的bean工厂的初始化，初始化所有剩余的单例bean。
 	 */
 	protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
-		// Initialize conversion service for this context.
+		/** 为此applicationContext初始ConversionService。 **/
 		if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME) &&
 				beanFactory.isTypeMatch(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class)) {
 			beanFactory.setConversionService(
 					beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME, ConversionService.class));
 		}
 
-		// Register a default embedded value resolver if no bean post-processor
-		// (such as a PropertyPlaceholderConfigurer bean) registered any before:
-		// at this point, primarily for resolution in annotation attribute values.
+		/** 如果没有bean后处理器，则注册默认的嵌入式值解析器 **/
 		if (!beanFactory.hasEmbeddedValueResolver()) {
 			beanFactory.addEmbeddedValueResolver(strVal -> getEnvironment().resolvePlaceholders(strVal));
 		}
 
-		// Initialize LoadTimeWeaverAware beans early to allow for registering their transformers early.
+		/** 尽早初始化LoadTimeWeaverAware Bean，以便尽早注册其转换器 **/
 		String[] weaverAwareNames = beanFactory.getBeanNamesForType(LoadTimeWeaverAware.class, false, false);
 		for (String weaverAwareName : weaverAwareNames) {
 			getBean(weaverAwareName);
 		}
 
-		// Stop using the temporary ClassLoader for type matching.
+		/** 停止使用临时的ClassLoader进行类型匹配。 **/
 		beanFactory.setTempClassLoader(null);
 
-		// Allow for caching all bean definition metadata, not expecting further changes.
+		/** 允许缓存所有bean定义元数据，而不期望进一步的更改。 **/
 		beanFactory.freezeConfiguration();
 
-		// Instantiate all remaining (non-lazy-init) singletons.
+		/** 实例化所有（非延迟初始化）单例Bean **/
 		beanFactory.preInstantiateSingletons();
 	}
 
 	/**
-	 * Finish the refresh of this context, invoking the LifecycleProcessor's
-	 * onRefresh() method and publishing the
-	 * {@link org.springframework.context.event.ContextRefreshedEvent}.
+	 * 完成此上下文的刷新，
 	 */
 	protected void finishRefresh() {
-		// Clear context-level resource caches (such as ASM metadata from scanning).
+		/** 清除applicationContext级别的资源缓存 **/
 		clearResourceCaches();
 
-		// Initialize lifecycle processor for this context.
+		/** 初始化 LifecycleProcessor. **/
 		initLifecycleProcessor();
 
-		// Propagate refresh to lifecycle processor first.
+		/** 刷新传播到生命周期处理器。 **/
 		getLifecycleProcessor().onRefresh();
 
-		// Publish the final event.
+		/**  发布ContextRefreshedEvent事件 **/
 		publishEvent(new ContextRefreshedEvent(this));
 
-		// Participate in LiveBeansView MBean, if active.
+		/**  如果活动，请参加LiveBeansView MBean。**/
 		LiveBeansView.registerApplicationContext(this);
 	}
 
 	/**
-	 * Cancel this context's refresh attempt, resetting the {@code active} flag
-	 * after an exception got thrown.
-	 * @param ex the exception that led to the cancellation
+	 * 取消applicationContext刷新功能
 	 */
 	protected void cancelRefresh(BeansException ex) {
 		this.active.set(false);
 	}
 
 	/**
-	 * Reset Spring's common reflection metadata caches, in particular the
+	 * 重置Spring的通用反射元数据缓存，尤其是
 	 * {@link ReflectionUtils}, {@link AnnotationUtils}, {@link ResolvableType}
 	 * and {@link CachedIntrospectionResults} caches.
 	 * @since 4.2
@@ -933,15 +903,16 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	}
 
 
+	/**
+	 * 销毁
+	 */
 	@Deprecated
 	public void destroy() {
 		close();
 	}
 
 	/**
-	 * Close this application context, destroying all beans in its bean factory.
-	 * <p>Delegates to {@code doClose()} for the actual closing procedure.
-	 * Also removes a JVM shutdown hook, if registered, as it's not needed anymore.
+	 * 关闭 applicationContext,
 	 * @see #doClose()
 	 * @see #registerShutdownHook()
 	 */
@@ -949,8 +920,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	public void close() {
 		synchronized (this.startupShutdownMonitor) {
 			doClose();
-			// If we registered a JVM shutdown hook, we don't need it anymore now:
-			// We've already explicitly closed the context.
+			/** 向JVM注销钩子线程shutdownHook **/
 			if (this.shutdownHook != null) {
 				try {
 					Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
@@ -970,7 +940,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 	 * @see #registerShutdownHook()
 	 */
 	protected void doClose() {
-		// Check whether an actual close attempt is necessary...
+		/** 检查是否需要实际尝试关闭... **/
 		if (this.active.get() && this.closed.compareAndSet(false, true)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("Closing " + this);
@@ -978,6 +948,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 
 			LiveBeansView.unregisterApplicationContext(this);
 
+			/**  发布 ContextStoppedEvent 事件**/
 			try {
 				publishEvent(new ContextClosedEvent(this));
 			}
@@ -985,7 +956,7 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader
 				logger.warn("Exception thrown from ApplicationListener handling ContextClosedEvent", ex);
 			}
 
-			// Stop all Lifecycle beans, to avoid delays during individual destruction.
+			/** 生命周期处理器组件执行停止，停止所有Lifecycle bean **/
 			if (this.lifecycleProcessor != null) {
 				try {
 					this.lifecycleProcessor.onClose();
