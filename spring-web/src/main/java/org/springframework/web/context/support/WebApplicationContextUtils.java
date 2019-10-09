@@ -166,9 +166,7 @@ public abstract class WebApplicationContextUtils {
 
 
 	/**
-	 * Register web-specific scopes ("request", "session", "globalSession")
-	 * with the given BeanFactory, as used by the WebApplicationContext.
-	 * @param beanFactory the BeanFactory to configure
+	 * 注册 WEB 环境特定的域（scope）处理类到 beanFactory 中
 	 */
 	public static void registerWebApplicationScopes(ConfigurableListableBeanFactory beanFactory) {
 		registerWebApplicationScopes(beanFactory, null);
@@ -199,14 +197,14 @@ public abstract class WebApplicationContextUtils {
 	}
 
 	/**
-	 * 将WEB环境特定对象ServletContext,ServletConfig信息注册到BeanFactory
+	 * 将WEB环境特定ServletContext,ServletConfig作为特定单例bean,注册到BeanFactory
 	 */
 	public static void registerEnvironmentBeans(ConfigurableListableBeanFactory bf, @Nullable ServletContext sc) {
 		registerEnvironmentBeans(bf, sc, null);
 	}
 
 	/**
-	 * 将WEB环境特定对象ServletContext,ServletConfig信息注册到BeanFactory
+	 * 将WEB环境特定ServletContext,ServletConfig作为特定单例bean,注册到BeanFactory
 	 */
 	public static void registerEnvironmentBeans(ConfigurableListableBeanFactory bf,
 			@Nullable ServletContext servletContext, @Nullable ServletConfig servletConfig) {
@@ -293,6 +291,7 @@ public abstract class WebApplicationContextUtils {
 		if (servletContext != null && sources.contains(name) && sources.get(name) instanceof StubPropertySource) {
 			sources.replace(name, new ServletContextPropertySource(name, servletContext));
 		}
+
 		name = StandardServletEnvironment.SERVLET_CONFIG_PROPERTY_SOURCE_NAME;
 		if (servletConfig != null && sources.contains(name) && sources.get(name) instanceof StubPropertySource) {
 			sources.replace(name, new ServletConfigPropertySource(name, servletConfig));

@@ -184,8 +184,7 @@ public class GenericWebApplicationContext extends GenericApplicationContext
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>Replace {@code Servlet}-related property sources.
+	 * 新建Environment，如果类型ConfigurableWebEnvironment则调用initPropertySources初始化
 	 */
 	@Override
 	protected void initPropertySources() {

@@ -43,10 +43,10 @@ import org.springframework.util.StringValueResolver;
  * plug'n'play and for special access to bean factory configuration methods.
  *
  * @author Juergen Hoeller
- * @since 03.11.2003
- * @see org.springframework.beans.factory.BeanFactory
- * @see org.springframework.beans.factory.ListableBeanFactory
- * @see ConfigurableListableBeanFactory
+ *  * @since 03.11.2003
+ *  * @see org.springframework.beans.factory.BeanFactory
+ *  * @see org.springframework.beans.factory.ListableBeanFactory
+ *  * @see ConfigurableListableBeanFactory
  */
 public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, SingletonBeanRegistry {
 
@@ -66,32 +66,17 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 
 
 	/**
-	 * Set the parent of this bean factory.
-	 * <p>Note that the parent cannot be changed: It should only be set outside
-	 * a constructor if it isn't available at the time of factory instantiation.
-	 * @param parentBeanFactory the parent BeanFactory
-	 * @throws IllegalStateException if this factory is already associated with
-	 * a parent BeanFactory
-	 * @see #getParentBeanFactory()
+	 * 设置当前BeanFactory的父BeanFactory
 	 */
 	void setParentBeanFactory(BeanFactory parentBeanFactory) throws IllegalStateException;
 
 	/**
-	 * Set the class loader to use for loading bean classes.
-	 * Default is the thread context class loader.
-	 * <p>Note that this class loader will only apply to bean definitions
-	 * that do not carry a resolved bean class yet. This is the case as of
-	 * Spring 2.0 by default: Bean definitions only carry bean class names,
-	 * to be resolved once the factory processes the bean definition.
-	 * @param beanClassLoader the class loader to use,
-	 * or {@code null} to suggest the default class loader
+	 * 设置BeanFactory类加载器
 	 */
 	void setBeanClassLoader(@Nullable ClassLoader beanClassLoader);
 
 	/**
-	 * Return this factory's class loader for loading bean classes
-	 * (only {@code null} if even the system ClassLoader isn't accessible).
-	 * @see org.springframework.util.ClassUtils#forName(String, ClassLoader)
+	 * 获取BeanFactory类加载器
 	 */
 	@Nullable
 	ClassLoader getBeanClassLoader();
@@ -398,10 +383,7 @@ public interface ConfigurableBeanFactory extends HierarchicalBeanFactory, Single
 	void destroyScopedBean(String beanName);
 
 	/**
-	 * Destroy all singleton beans in this factory, including inner beans that have
-	 * been registered as disposable. To be called on shutdown of a factory.
-	 * <p>Any exception that arises during destruction should be caught
-	 * and logged instead of propagated to the caller of this method.
+	 * 销毁所有单例Bean实例缓存
 	 */
 	void destroySingletons();
 

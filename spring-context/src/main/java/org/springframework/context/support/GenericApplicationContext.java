@@ -104,19 +104,14 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 
 
 	/**
-	 * Create a new GenericApplicationContext.
-	 * @see #registerBeanDefinition
-	 * @see #refresh
+	 * 创建一个新的GenericApplicationContext。
 	 */
 	public GenericApplicationContext() {
 		this.beanFactory = new DefaultListableBeanFactory();
 	}
 
 	/**
-	 * Create a new GenericApplicationContext with the given DefaultListableBeanFactory.
-	 * @param beanFactory the DefaultListableBeanFactory instance to use for this context
-	 * @see #registerBeanDefinition
-	 * @see #refresh
+	 * 使用给定的DefaultListableBeanFactory创建一个新的GenericApplicationContext。
 	 */
 	public GenericApplicationContext(DefaultListableBeanFactory beanFactory) {
 		Assert.notNull(beanFactory, "BeanFactory must not be null");
@@ -124,10 +119,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Create a new GenericApplicationContext with the given parent.
-	 * @param parent the parent application context
-	 * @see #registerBeanDefinition
-	 * @see #refresh
+	 * 使用给定的父级创建一个新的GenericApplicationContext
 	 */
 	public GenericApplicationContext(@Nullable ApplicationContext parent) {
 		this();
@@ -135,21 +127,15 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Create a new GenericApplicationContext with the given DefaultListableBeanFactory.
-	 * @param beanFactory the DefaultListableBeanFactory instance to use for this context
-	 * @param parent the parent application context
-	 * @see #registerBeanDefinition
-	 * @see #refresh
+	 * 使用给定的DefaultListableBeanFactory，父级ApplicationContext实例化一个新的GenericApplicationContext。
 	 */
 	public GenericApplicationContext(DefaultListableBeanFactory beanFactory, ApplicationContext parent) {
 		this(beanFactory);
 		setParent(parent);
 	}
 
-
 	/**
-	 * Set the parent of this application context, also setting
-	 * the parent of the internal BeanFactory accordingly.
+	 * 设置此ApplicationContext的父级，还相应地设置内部BeanFactory的父级。
 	 * @see org.springframework.beans.factory.config.ConfigurableBeanFactory#setParentBeanFactory
 	 */
 	@Override
@@ -159,10 +145,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Set whether it should be allowed to override bean definitions by registering
-	 * a different definition with the same name, automatically replacing the former.
-	 * If not, an exception will be thrown. Default is "true".
-	 * @since 3.0
+	 * 设置是否允许覆盖同名称的不同定义的BeanDefinition对象
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowBeanDefinitionOverriding
 	 */
 	public void setAllowBeanDefinitionOverriding(boolean allowBeanDefinitionOverriding) {
@@ -170,11 +153,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Set whether to allow circular references between beans - and automatically
-	 * try to resolve them.
-	 * <p>Default is "true". Turn this off to throw an exception when encountering
-	 * a circular reference, disallowing them completely.
-	 * @since 3.0
+	 * 设置是否允许bean之间存在循环依赖
 	 * @see org.springframework.beans.factory.support.DefaultListableBeanFactory#setAllowCircularReferences
 	 */
 	public void setAllowCircularReferences(boolean allowCircularReferences) {
@@ -182,17 +161,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Set a ResourceLoader to use for this context. If set, the context will
-	 * delegate all {@code getResource} calls to the given ResourceLoader.
-	 * If not set, default resource loading will apply.
-	 * <p>The main reason to specify a custom ResourceLoader is to resolve
-	 * resource paths (without URL prefix) in a specific fashion.
-	 * The default behavior is to resolve such paths as class path locations.
-	 * To resolve resource paths as file system locations, specify a
-	 * FileSystemResourceLoader here.
-	 * <p>You can also pass in a full ResourcePatternResolver, which will
-	 * be autodetected by the context and used for {@code getResources}
-	 * calls as well. Else, default resource pattern matching will apply.
+	 * 设置要用于此上下文的资源加载器。如果设置了，上下文将把所有{@code getresource}调用委托给给定的resourceloader。如果未设置，将应用默认资源加载。
 	 * @see #getResource
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 * @see org.springframework.core.io.FileSystemResourceLoader
@@ -205,7 +174,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 
 
 	//---------------------------------------------------------------------
-	// ResourceLoader / ResourcePatternResolver override if necessary
+	// 必要时重写ResourceLoader / ResourcePatternResolver
 	//---------------------------------------------------------------------
 
 	/**
@@ -235,6 +204,9 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 		return super.getResources(locationPattern);
 	}
 
+	/**
+	 * 重写设置ClassLoader
+	 */
 	@Override
 	public void setClassLoader(@Nullable ClassLoader classLoader) {
 		super.setClassLoader(classLoader);
@@ -256,9 +228,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	//---------------------------------------------------------------------
 
 	/**
-	 * Do nothing: We hold a single internal BeanFactory and rely on callers
-	 * to register beans through our public methods (or the BeanFactory's).
-	 * @see #registerBeanDefinition
+	 * GenericApplicationContext不执行任何操作：实例化时就创建内部BeanFactory，
 	 */
 	@Override
 	protected final void refreshBeanFactory() throws IllegalStateException {
@@ -276,8 +246,8 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Not much to do: We hold a single internal BeanFactory that will never
-	 * get released.
+	 * 关闭内部BeanFactory
+	 * GenericApplicationContext并不会释放内部BeanFactory。
 	 */
 	@Override
 	protected final void closeBeanFactory() {
@@ -285,8 +255,7 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Return the single internal BeanFactory held by this context
-	 * (as ConfigurableListableBeanFactory).
+	 * 返回内部ConfigurableListableBeanFactory,本质返回DefaultListableBeanFactory
 	 */
 	@Override
 	public final ConfigurableListableBeanFactory getBeanFactory() {
@@ -294,17 +263,15 @@ public class GenericApplicationContext extends AbstractApplicationContext implem
 	}
 
 	/**
-	 * Return the underlying bean factory of this context,
-	 * available for registering bean definitions.
-	 * <p><b>NOTE:</b> You need to call {@link #refresh()} to initialize the
-	 * bean factory and its contained beans with application context semantics
-	 * (autodetecting BeanFactoryPostProcessors, etc).
-	 * @return the internal bean factory (as DefaultListableBeanFactory)
+	 * 返回内部DefaultListableBeanFactory,本质返回DefaultListableBeanFactory
 	 */
 	public final DefaultListableBeanFactory getDefaultListableBeanFactory() {
 		return this.beanFactory;
 	}
 
+	/**
+	 * 返回内部AutowireCapableBeanFactory,本质返回DefaultListableBeanFactory
+	 */
 	@Override
 	public AutowireCapableBeanFactory getAutowireCapableBeanFactory() throws IllegalStateException {
 		assertBeanFactoryActive();

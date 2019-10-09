@@ -35,69 +35,37 @@ import org.springframework.web.context.ServletConfigAware;
 import org.springframework.web.context.ServletContextAware;
 
 /**
- * {@link org.springframework.context.support.AbstractRefreshableApplicationContext}
- * subclass which implements the
- * {@link org.springframework.web.context.ConfigurableWebApplicationContext}
- * interface for web environments. Provides a "configLocations" property,
- * to be populated through the ConfigurableWebApplicationContext interface
- * on web application startup.
  *
- * <p>This class is as easy to subclass as AbstractRefreshableApplicationContext:
- * All you need to implements is the {@link #loadBeanDefinitions} method;
- * see the superclass javadoc for details. Note that implementations are supposed
- * to load bean definitions from the files specified by the locations returned
- * by the {@link #getConfigLocations} method.
- *
- * <p>Interprets resource paths as servlet context resources, i.e. as paths beneath
- * the web application root. Absolute paths, e.g. for files outside the web app root,
- * can be accessed via "file:" URLs, as implemented by
- * {@link org.springframework.core.io.DefaultResourceLoader}.
- *
- * <p>In addition to the special beans detected by
- * {@link org.springframework.context.support.AbstractApplicationContext},
- * this class detects a bean of type {@link org.springframework.ui.context.ThemeSource}
- * in the context, under the special bean name "themeSource".
- *
- * <p><b>This is the web context to be subclassed for a different bean definition format.</b>
- * Such a context implementation can be specified as "contextClass" context-param
- * for {@link org.springframework.web.context.ContextLoader} or as "contextClass"
- * init-param for {@link org.springframework.web.servlet.FrameworkServlet},
- * replacing the default {@link XmlWebApplicationContext}. It will then automatically
- * receive the "contextConfigLocation" context-param or init-param, respectively.
- *
- * <p>Note that WebApplicationContext implementations are generally supposed
- * to configure themselves based on the configuration received through the
- * {@link ConfigurableWebApplicationContext} interface. In contrast, a standalone
- * application context might allow for configuration in custom startup code
- * (for example, {@link org.springframework.context.support.GenericApplicationContext}).
- *
- * @author Juergen Hoeller
- * @since 1.1.3
- * @see #loadBeanDefinitions
- * @see org.springframework.web.context.ConfigurableWebApplicationContext#setConfigLocations
- * @see org.springframework.ui.context.ThemeSource
- * @see XmlWebApplicationContext
  */
 public abstract class AbstractRefreshableWebApplicationContext extends AbstractRefreshableConfigApplicationContext
 		implements ConfigurableWebApplicationContext, ThemeSource {
 
-	/** Servlet context that this context runs in. */
+	/**
+	 * web环境servletContext
+	 */
 	@Nullable
 	private ServletContext servletContext;
 
-	/** Servlet config that this context runs in, if any. */
+	/**
+	 * web环境ServletConfig
+	 */
 	@Nullable
 	private ServletConfig servletConfig;
 
-	/** Namespace of this context, or {@code null} if root. */
+
+	/** ApplicationContext的命名空间，如果为root，则为{@code null}。 */
 	@Nullable
 	private String namespace;
 
-	/** the ThemeSource for this ApplicationContext. */
+
+	/** ApplicationContext的ThemeSource。 */
 	@Nullable
 	private ThemeSource themeSource;
 
 
+	/**
+	 *
+	 */
 	public AbstractRefreshableWebApplicationContext() {
 		setDisplayName("Root WebApplicationContext");
 	}
@@ -153,8 +121,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * Create and return a new {@link StandardServletEnvironment}. Subclasses may override
-	 * in order to configure the environment or specialize the environment type returned.
+	 * 重写了父类实现，创建并返回一个新的Environment 类型为{@link StandardServletEnvironment}
 	 */
 	@Override
 	protected ConfigurableEnvironment createEnvironment() {
@@ -170,6 +137,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 		 * 注册BeanPostProcessor 实现类ServletContextAwareProcessor 给beanFactory，负责在bean初始化前判断是否实现ServletContextAware，ServletConfigAware
 		 * 如果实现调用实现接口方法将ServletContext，ServletConfig设置给bean **/
 		beanFactory.addBeanPostProcessor(new ServletContextAwareProcessor(this.servletContext, this.servletConfig));
+
 		/** 设置忽略自动装配的接口 **/
 		beanFactory.ignoreDependencyInterface(ServletContextAware.class);
 		beanFactory.ignoreDependencyInterface(ServletConfigAware.class);
@@ -181,8 +149,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * This implementation supports file paths beneath the root of the ServletContext.
-	 * @see ServletContextResource
+	 * 获取ServletContext根目录资源
 	 */
 	@Override
 	protected Resource getResourceByPath(String path) {
@@ -208,8 +175,7 @@ public abstract class AbstractRefreshableWebApplicationContext extends AbstractR
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * <p>Replace {@code Servlet}-related property sources.
+	 * 新建Environment，如果类型ConfigurableWebEnvironment则调用initPropertySources初始化
 	 */
 	@Override
 	protected void initPropertySources() {

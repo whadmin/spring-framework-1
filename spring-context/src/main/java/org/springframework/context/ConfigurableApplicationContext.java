@@ -44,181 +44,102 @@ import org.springframework.lang.Nullable;
 public interface ConfigurableApplicationContext extends ApplicationContext, Lifecycle, Closeable {
 
 	/**
-	 * Any number of these characters are considered delimiters between
-	 * multiple context config paths in a single String value.
-	 * @see org.springframework.context.support.AbstractXmlApplicationContext#setConfigLocation
-	 * @see org.springframework.web.context.ContextLoader#CONFIG_LOCATION_PARAM
-	 * @see org.springframework.web.servlet.FrameworkServlet#setContextConfigLocation
+	 * String表示多个配置路径之间的分隔符
 	 */
 	String CONFIG_LOCATION_DELIMITERS = ",; \t\n";
 
 	/**
-	 * Name of the ConversionService bean in the factory.
-	 * If none is supplied, default conversion rules apply.
-	 * @since 3.0
-	 * @see org.springframework.core.convert.ConversionService
+	 * BeanFactory中ConversionService bean的名称
 	 */
 	String CONVERSION_SERVICE_BEAN_NAME = "conversionService";
 
 	/**
-	 * Name of the LoadTimeWeaver bean in the factory. If such a bean is supplied,
-	 * the context will use a temporary ClassLoader for type matching, in order
-	 * to allow the LoadTimeWeaver to process all actual bean classes.
-	 * @since 2.5
-	 * @see org.springframework.instrument.classloading.LoadTimeWeaver
+	 * BeanFactory中LoadTimeWeaver bean的名称
 	 */
 	String LOAD_TIME_WEAVER_BEAN_NAME = "loadTimeWeaver";
 
 	/**
-	 * Name of the {@link Environment} bean in the factory.
-	 * @since 3.1
+	 * BeanFactory中Environment bean的名称
 	 */
 	String ENVIRONMENT_BEAN_NAME = "environment";
 
 	/**
-	 * Name of the System properties bean in the factory.
-	 * @see java.lang.System#getProperties()
+	 * BeanFactory中System#getProperties() bean的名称
 	 */
 	String SYSTEM_PROPERTIES_BEAN_NAME = "systemProperties";
 
 	/**
-	 * Name of the System environment bean in the factory.
-	 * @see java.lang.System#getenv()
+	 * BeanFactory中System#getenv() bean的名称
 	 */
 	String SYSTEM_ENVIRONMENT_BEAN_NAME = "systemEnvironment";
 
 	/**
-	 * {@link Thread#getName() Name} of the {@linkplain #registerShutdownHook()
-	 * shutdown hook} thread: {@value}.
-	 * @since 5.2
-	 * @see #registerShutdownHook()
+	 * 关闭钩子线程名称
 	 */
 	String SHUTDOWN_HOOK_THREAD_NAME = "SpringContextShutdownHook";
 
 
 	/**
-	 * Set the unique id of this application context.
-	 * @since 3.0
+	 * 设置此ApplicationContext文的唯一ID。
 	 */
 	void setId(String id);
 
 	/**
-	 * Set the parent of this application context.
-	 * <p>Note that the parent shouldn't be changed: It should only be set outside
-	 * a constructor if it isn't available when an object of this class is created,
-	 * for example in case of WebApplicationContext setup.
-	 * @param parent the parent context
-	 * @see org.springframework.web.context.ConfigurableWebApplicationContext
+	 * 设置父ApplicationContext
 	 */
 	void setParent(@Nullable ApplicationContext parent);
 
 	/**
-	 * Set the {@code Environment} for this application context.
-	 * @param environment the new environment
-	 * @since 3.1
+	 * 设置此ApplicationContext对应Environment
 	 */
 	void setEnvironment(ConfigurableEnvironment environment);
 
 	/**
-	 * Return the {@code Environment} for this application context in configurable
-	 * form, allowing for further customization.
-	 * @since 3.1
+	 * 返回此ApplicationContext对应Environment
 	 */
 	@Override
 	ConfigurableEnvironment getEnvironment();
 
 	/**
-	 * Add a new BeanFactoryPostProcessor that will get applied to the internal
-	 * bean factory of this application context on refresh, before any of the
-	 * bean definitions get evaluated. To be invoked during context configuration.
-	 * @param postProcessor the factory processor to register
+	 * 注册BeanFactoryPostProcessor，
+	 * BeanFactoryPostProcessor在刷新执行postProcessBeanFactory时被调用，对BeanFactory功能做扩展
 	 */
 	void addBeanFactoryPostProcessor(BeanFactoryPostProcessor postProcessor);
 
 	/**
-	 * Add a new ApplicationListener that will be notified on context events
-	 * such as context refresh and context shutdown.
-	 * <p>Note that any ApplicationListener registered here will be applied
-	 * on refresh if the context is not active yet, or on the fly with the
-	 * current event multicaster in case of a context that is already active.
-	 * @param listener the ApplicationListener to register
-	 * @see org.springframework.context.event.ContextRefreshedEvent
-	 * @see org.springframework.context.event.ContextClosedEvent
+	 * 注册触发ApplicationEvent事件监听器ApplicationListener
 	 */
 	void addApplicationListener(ApplicationListener<?> listener);
 
 	/**
-	 * Register the given protocol resolver with this application context,
-	 * allowing for additional resource protocols to be handled.
-	 * <p>Any such resolver will be invoked ahead of this context's standard
-	 * resolution rules. It may therefore also override any default rules.
-	 * @since 4.3
+	 * 注册指定的协议解析器 ProtocolResolver
 	 */
 	void addProtocolResolver(ProtocolResolver resolver);
 
 	/**
-	 * Load or refresh the persistent representation of the configuration,
-	 * which might an XML file, properties file, or relational database schema.
-	 * <p>As this is a startup method, it should destroy already created singletons
-	 * if it fails, to avoid dangling resources. In other words, after invocation
-	 * of that method, either all or no singletons at all should be instantiated.
-	 * @throws BeansException if the bean factory could not be initialized
-	 * @throws IllegalStateException if already initialized and multiple refresh
-	 * attempts are not supported
+	 * 刷新
 	 */
 	void refresh() throws BeansException, IllegalStateException;
 
 	/**
-	 * Register a shutdown hook with the JVM runtime, closing this context
-	 * on JVM shutdown unless it has already been closed at that time.
-	 * <p>This method can be called multiple times. Only one shutdown hook
-	 * (at max) will be registered for each context instance.
-	 * <p>As of Spring Framework 5.2, the {@linkplain Thread#getName() name} of
-	 * the shutdown hook thread should be {@link #SHUTDOWN_HOOK_THREAD_NAME}.
-	 * @see java.lang.Runtime#addShutdownHook
-	 * @see #close()
+	 * 注册一个关闭钩子名称为"SpringContextShutdownHook"线程，
+	 * 在JVM关闭时被触发，调用{@code doClose()}执行实际关闭操作
 	 */
 	void registerShutdownHook();
 
 	/**
-	 * Close this application context, releasing all resources and locks that the
-	 * implementation might hold. This includes destroying all cached singleton beans.
-	 * <p>Note: Does <i>not</i> invoke {@code close} on a parent context;
-	 * parent contexts have their own, independent lifecycle.
-	 * <p>This method can be called multiple times without side effects: Subsequent
-	 * {@code close} calls on an already closed context will be ignored.
+	 * 关闭此ApplicationContext，释放实现可能持有的所有资源和锁
 	 */
 	@Override
 	void close();
 
 	/**
-	 * Determine whether this application context is active, that is,
-	 * whether it has been refreshed at least once and has not been closed yet.
-	 * @return whether the context is still active
-	 * @see #refresh()
-	 * @see #close()
-	 * @see #getBeanFactory()
+	 * 确定此ApplicationContext文是否处于活动状态，即，是否至少刷新一次并且尚未关闭。
 	 */
 	boolean isActive();
 
 	/**
-	 * Return the internal bean factory of this application context.
-	 * Can be used to access specific functionality of the underlying factory.
-	 * <p>Note: Do not use this to post-process the bean factory; singletons
-	 * will already have been instantiated before. Use a BeanFactoryPostProcessor
-	 * to intercept the BeanFactory setup process before beans get touched.
-	 * <p>Generally, this internal factory will only be accessible while the context
-	 * is active, that is, in-between {@link #refresh()} and {@link #close()}.
-	 * The {@link #isActive()} flag can be used to check whether the context
-	 * is in an appropriate state.
-	 * @return the underlying bean factory
-	 * @throws IllegalStateException if the context does not hold an internal
-	 * bean factory (usually if {@link #refresh()} hasn't been called yet or
-	 * if {@link #close()} has already been called)
-	 * @see #isActive()
-	 * @see #refresh()
-	 * @see #close()
-	 * @see #addBeanFactoryPostProcessor
+	 * 返回此应用程序上下文的内部BeanFactory
 	 */
 	ConfigurableListableBeanFactory getBeanFactory() throws IllegalStateException;
 

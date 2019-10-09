@@ -24,13 +24,13 @@ import org.springframework.lang.Nullable;
 public interface HierarchicalBeanFactory extends BeanFactory {
 
 	/**
-	 * 返回本BeanFactory的父BeanFactory
+	 * 获取当前BeanFactory的父BeanFactory
 	 */
 	@Nullable
 	BeanFactory getParentBeanFactory();
 
 	/**
-	 * 当前BeanFactory是否包含指定bean名称
+	 * BeanFactory是否包含指定名称Bean
 	 */
 	boolean containsLocalBean(String name);
 
