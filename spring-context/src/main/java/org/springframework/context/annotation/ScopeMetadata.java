@@ -20,27 +20,25 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.util.Assert;
 
 /**
- * Describes scope characteristics for a Spring-managed bean including the scope
- * name and the scoped-proxy behavior.
  *
- * <p>The default scope is "singleton", and the default is to <i>not</i> create
- * scoped-proxies.
- *
- * @author Mark Fisher
- * @author Juergen Hoeller
- * @since 2.5
- * @see ScopeMetadataResolver
- * @see ScopedProxyMode
+ * 描述Spring管理的bean的作用域元数据信息。
+ * <p>默认范围是“单例”，默认是不创建范围代理。
  */
 public class ScopeMetadata {
 
+	/**
+	 * 作用域，默认范围是“单例”
+	 */
 	private String scopeName = BeanDefinition.SCOPE_SINGLETON;
 
+	/**
+	 * 作用域代理选项，默认是不创建范围代理。
+	 */
 	private ScopedProxyMode scopedProxyMode = ScopedProxyMode.NO;
 
 
 	/**
-	 * Set the name of the scope.
+	 * 设置作用域
 	 */
 	public void setScopeName(String scopeName) {
 		Assert.notNull(scopeName, "'scopeName' must not be null");
@@ -48,14 +46,14 @@ public class ScopeMetadata {
 	}
 
 	/**
-	 * Get the name of the scope.
+	 * 获取作用域
 	 */
 	public String getScopeName() {
 		return this.scopeName;
 	}
 
 	/**
-	 * Set the proxy-mode to be applied to the scoped instance.
+	 * 设置作用域代理选项
 	 */
 	public void setScopedProxyMode(ScopedProxyMode scopedProxyMode) {
 		Assert.notNull(scopedProxyMode, "'scopedProxyMode' must not be null");
@@ -63,7 +61,7 @@ public class ScopeMetadata {
 	}
 
 	/**
-	 * Get the proxy-mode to be applied to the scoped instance.
+	 * 获取作用域代理选项
 	 */
 	public ScopedProxyMode getScopedProxyMode() {
 		return this.scopedProxyMode;

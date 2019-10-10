@@ -141,16 +141,31 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	@Nullable
 	private volatile Object beanClass;
 
+	/**
+	 * 作用域
+	 */
 	@Nullable
 	private String scope = SCOPE_DEFAULT;
 
+	/**
+	 * 是否是抽象的
+	 */
 	private boolean abstractFlag = false;
 
+	/**
+	 * 是否延迟加载
+	 */
 	@Nullable
 	private Boolean lazyInit;
 
+	/**
+	 * 自动注入策略
+	 */
 	private int autowireMode = AUTOWIRE_NO;
 
+	/**
+	 * 依赖检查方式
+	 */
 	private int dependencyCheck = DEPENDENCY_CHECK_NONE;
 
 	@Nullable
@@ -162,6 +177,9 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 	private final Map<String, AutowireCandidateQualifier> qualifiers = new LinkedHashMap<>();
 
+	/**
+	 * 用于创建创建Bean实例，如果设置将在createBeanInstance中优先通过Supplier创建bean实例
+	 */
 	@Nullable
 	private Supplier<?> instanceSupplier;
 
@@ -169,24 +187,39 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 
 	private boolean lenientConstructorResolution = true;
 
+	/**
+	 * 工程Bean名称
+	 */
 	@Nullable
 	private String factoryBeanName;
 
+	/**
+	 * 工程Bean创建Bean的方法名称
+	 */
 	@Nullable
 	private String factoryMethodName;
 
 	@Nullable
 	private ConstructorArgumentValues constructorArgumentValues;
 
+	/**
+	 * 批量属性设置器
+	 */
 	@Nullable
 	private MutablePropertyValues propertyValues;
 
 	@Nullable
 	private MethodOverrides methodOverrides;
 
+	/**
+	 * 初始化方法
+	 */
 	@Nullable
 	private String initMethodName;
 
+	/**
+	 * 销毁方法
+	 */
 	@Nullable
 	private String destroyMethodName;
 

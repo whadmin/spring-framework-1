@@ -22,11 +22,7 @@ import java.util.Set;
 
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
-import org.springframework.context.annotation.AnnotationConfigRegistry;
-import org.springframework.context.annotation.AnnotationConfigUtils;
-import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
-import org.springframework.context.annotation.ScopeMetadataResolver;
+import org.springframework.context.annotation.*;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -84,21 +80,32 @@ import org.springframework.web.context.ContextLoader;
 public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWebApplicationContext
 		implements AnnotationConfigRegistry {
 
+	/**
+	 * Bean名称生成器
+	 */
 	@Nullable
 	private BeanNameGenerator beanNameGenerator;
 
+	/**
+	 * 作用域{@link Scope @Scope}解析器
+	 */
 	@Nullable
 	private ScopeMetadataResolver scopeMetadataResolver;
 
+	/**
+	 * @Configuration 配置类（内部定义@Bean ）
+	 */
 	private final Set<Class<?>> annotatedClasses = new LinkedHashSet<>();
 
+	/**
+	 * 扫描@Component注解定义Bean包路径
+	 */
 	private final Set<String> basePackages = new LinkedHashSet<>();
 
 
 	/**
-	 * Set a custom {@link BeanNameGenerator} for use with {@link AnnotatedBeanDefinitionReader}
-	 * and/or {@link ClassPathBeanDefinitionScanner}.
-	 * <p>Default is {@link org.springframework.context.annotation.AnnotationBeanNameGenerator}.
+	 * 设置Bean名称生成器 {@link BeanNameGenerator}
+	 * <p>默认实现类{@link AnnotationBeanNameGenerator}.作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
 	 * @see AnnotatedBeanDefinitionReader#setBeanNameGenerator
 	 * @see ClassPathBeanDefinitionScanner#setBeanNameGenerator
 	 */
@@ -107,8 +114,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * Return the custom {@link BeanNameGenerator} for use with {@link AnnotatedBeanDefinitionReader}
-	 * and/or {@link ClassPathBeanDefinitionScanner}, if any.
+	 * 返回Bean名称生成器 {@link BeanNameGenerator}
 	 */
 	@Nullable
 	protected BeanNameGenerator getBeanNameGenerator() {
@@ -116,9 +122,8 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * Set a custom {@link ScopeMetadataResolver} for use with {@link AnnotatedBeanDefinitionReader}
-	 * and/or {@link ClassPathBeanDefinitionScanner}.
-	 * <p>Default is an {@link org.springframework.context.annotation.AnnotationScopeMetadataResolver}.
+	 * 设置作用域{@link ScopeMetadataResolver}解析器
+	 * <p>默认实现类{@link AnnotationScopeMetadataResolver}..作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
 	 * @see AnnotatedBeanDefinitionReader#setScopeMetadataResolver
 	 * @see ClassPathBeanDefinitionScanner#setScopeMetadataResolver
 	 */
@@ -127,8 +132,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * Return the custom {@link ScopeMetadataResolver} for use with {@link AnnotatedBeanDefinitionReader}
-	 * and/or {@link ClassPathBeanDefinitionScanner}, if any.
+	 * 返回自作用域{@link ScopeMetadataResolver}解析器
 	 */
 	@Nullable
 	protected ScopeMetadataResolver getScopeMetadataResolver() {
@@ -137,15 +141,8 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
 
 	/**
-	 * Register one or more annotated classes to be processed.
-	 * <p>Note that {@link #refresh()} must be called in order for the context
-	 * to fully process the new classes.
-	 * @param annotatedClasses one or more annotated classes,
-	 * e.g. {@link org.springframework.context.annotation.Configuration @Configuration} classes
-	 * @see #scan(String...)
-	 * @see #loadBeanDefinitions(DefaultListableBeanFactory)
-	 * @see #setConfigLocation(String)
-	 * @see #refresh()
+	 * 注册一个或多个@Configuration 配置类
+	 * 请注意，必须调用{@link #refresh（）}才能将@Configuration类实例，主动BeanFactory管理使上下文完全处理新类。
 	 */
 	@Override
 	public void register(Class<?>... annotatedClasses) {
@@ -154,14 +151,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * Perform a scan within the specified base packages.
-	 * <p>Note that {@link #refresh()} must be called in order for the context
-	 * to fully process the new classes.
-	 * @param basePackages the packages to check for annotated classes
-	 * @see #loadBeanDefinitions(DefaultListableBeanFactory)
-	 * @see #register(Class...)
-	 * @see #setConfigLocation(String)
-	 * @see #refresh()
+	 * 注册扫描@Component注解定义Bean包路径
 	 */
 	@Override
 	public void scan(String... basePackages) {

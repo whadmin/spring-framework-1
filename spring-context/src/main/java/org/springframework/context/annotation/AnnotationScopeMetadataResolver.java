@@ -24,49 +24,41 @@ import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.util.Assert;
 
 /**
- * A {@link ScopeMetadataResolver} implementation that by default checks for
- * the presence of Spring's {@link Scope @Scope} annotation on the bean class.
+ * A {@link ScopeMetadataResolver}接口默认情况下检查Bean类上是否存在Spring的{@link Scope @Scope}注解。
+ * 并解析{@link Scope @Scope}注解配置作用域元数据信息ScopeMetadata
  *
- * <p>The exact type of annotation that is checked for is configurable via
- * {@link #setScopeAnnotationType(Class)}.
- *
- * @author Mark Fisher
- * @author Juergen Hoeller
- * @author Sam Brannen
- * @since 2.5
  * @see org.springframework.context.annotation.Scope
  */
 public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 
+	/**
+	 * 当配置作用域代理选项为ScopedProxyMode.DEFAULT时，解析获取默认作用域代理选项
+	 */
 	private final ScopedProxyMode defaultProxyMode;
 
+	/**
+	 * scope注解类型
+	 */
 	protected Class<? extends Annotation> scopeAnnotationType = Scope.class;
 
 
 	/**
-	 * Construct a new {@code AnnotationScopeMetadataResolver}.
-	 * @see #AnnotationScopeMetadataResolver(ScopedProxyMode)
-	 * @see ScopedProxyMode#NO
+	 * 构造一个新的{@code AnnotationScopeMetadataResolver}，默认用域代理选项为ScopedProxyMode.NO
 	 */
 	public AnnotationScopeMetadataResolver() {
 		this.defaultProxyMode = ScopedProxyMode.NO;
 	}
 
 	/**
-	 * Construct a new {@code AnnotationScopeMetadataResolver} using the
-	 * supplied default {@link ScopedProxyMode}.
-	 * @param defaultProxyMode the default scoped-proxy mode
+	 * 构造一个新的{@code AnnotationScopeMetadataResolver}，并设置默认用域代理选项
 	 */
 	public AnnotationScopeMetadataResolver(ScopedProxyMode defaultProxyMode) {
 		Assert.notNull(defaultProxyMode, "'defaultProxyMode' must not be null");
 		this.defaultProxyMode = defaultProxyMode;
 	}
 
-
 	/**
-	 * Set the type of annotation that is checked for by this
-	 * {@code AnnotationScopeMetadataResolver}.
-	 * @param scopeAnnotationType the target annotation type
+	 * 设置scope注释的类型
 	 */
 	public void setScopeAnnotationType(Class<? extends Annotation> scopeAnnotationType) {
 		Assert.notNull(scopeAnnotationType, "'scopeAnnotationType' must not be null");
@@ -74,13 +66,23 @@ public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 	}
 
 
+	/**
+	 * 解析BeanDefinition获取作用域元数据信息ScopeMetadata
+	 */
 	@Override
 	public ScopeMetadata resolveScopeMetadata(BeanDefinition definition) {
+		/** 实例化ScopeMetadata **/
 		ScopeMetadata metadata = new ScopeMetadata();
+		/** 判断当前BeanDefinition 类型是否为AnnotatedBeanDefinition **/
 		if (definition instanceof AnnotatedBeanDefinition) {
+			/** 类型转换 **/
 			AnnotatedBeanDefinition annDef = (AnnotatedBeanDefinition) definition;
+
+			/** 获取scopeAnnotationType注解的属性对象 **/
 			AnnotationAttributes attributes = AnnotationConfigUtils.attributesFor(
 					annDef.getMetadata(), this.scopeAnnotationType);
+
+            /** 获取scopeAnnotationType注解作用域，作用域代理选项设置到ScopeMetadata **/
 			if (attributes != null) {
 				metadata.setScopeName(attributes.getString("value"));
 				ScopedProxyMode proxyMode = attributes.getEnum("proxyMode");
@@ -90,6 +92,7 @@ public class AnnotationScopeMetadataResolver implements ScopeMetadataResolver {
 				metadata.setScopedProxyMode(proxyMode);
 			}
 		}
+		/** 返回ScopeMetadata **/
 		return metadata;
 	}
 
