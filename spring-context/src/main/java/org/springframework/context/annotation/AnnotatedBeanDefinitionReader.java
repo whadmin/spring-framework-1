@@ -38,7 +38,7 @@ import org.springframework.util.Assert;
  * 1 读取注解定义的Bean,将其解析成BeanDefinition注册到BeanFactory，这里会解析注解定义的Bean上如下注解
  * @Lazy，@DependsOn，@Role，@Description,@Scope 将其配置信息写入BeanDefinition
  *
- * 2 向BeanDefinitionRegistry默认实现DefaultListableBeanFactory）注册注解配置处理器
+ * 2 向BeanDefinitionRegistry(默认实现DefaultListableBeanFactory）注册注解配置处理器,这里处理器作为单例Bean被管理
  *
  * 这些处理器在bean实例化时基于开闭原则进行功能扩展其中包括
  *

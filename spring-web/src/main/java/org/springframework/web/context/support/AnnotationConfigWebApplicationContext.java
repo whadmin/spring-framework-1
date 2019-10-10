@@ -82,39 +82,38 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
 	/**
 	 * Bean名称生成器
+	 * 默认实现类{@link AnnotationBeanNameGenerator}.作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
 	 */
 	@Nullable
 	private BeanNameGenerator beanNameGenerator;
 
 	/**
-	 * 作用域{@link Scope @Scope}解析器
+	 * 作用域解析器 (如果注解定义的Bean配置{@link Scope}注解，通过调用resolveScopeMetadata方法解析获取作用域元数据)
+	 * 默认实现类{@link AnnotationScopeMetadataResolver}.作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
 	 */
 	@Nullable
 	private ScopeMetadataResolver scopeMetadataResolver;
 
 	/**
-	 * @Configuration 配置类（内部定义@Bean ）
+	 * 注解配置Bean Class集合
 	 */
 	private final Set<Class<?>> annotatedClasses = new LinkedHashSet<>();
 
 	/**
-	 * 扫描@Component注解定义Bean包路径
+	 * 扫描注解定义Bean包路径集合
 	 */
 	private final Set<String> basePackages = new LinkedHashSet<>();
 
 
 	/**
-	 * 设置Bean名称生成器 {@link BeanNameGenerator}
-	 * <p>默认实现类{@link AnnotationBeanNameGenerator}.作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
-	 * @see AnnotatedBeanDefinitionReader#setBeanNameGenerator
-	 * @see ClassPathBeanDefinitionScanner#setBeanNameGenerator
+	 * 设置Bean名称生成器
 	 */
 	public void setBeanNameGenerator(@Nullable BeanNameGenerator beanNameGenerator) {
 		this.beanNameGenerator = beanNameGenerator;
 	}
 
 	/**
-	 * 返回Bean名称生成器 {@link BeanNameGenerator}
+	 * 返回Bean名称生成器
 	 */
 	@Nullable
 	protected BeanNameGenerator getBeanNameGenerator() {
@@ -122,17 +121,14 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * 设置作用域{@link ScopeMetadataResolver}解析器
-	 * <p>默认实现类{@link AnnotationScopeMetadataResolver}..作用于{@link AnnotatedBeanDefinitionReader}/{@link ClassPathBeanDefinitionScanner}.
-	 * @see AnnotatedBeanDefinitionReader#setScopeMetadataResolver
-	 * @see ClassPathBeanDefinitionScanner#setScopeMetadataResolver
+	 * 设置作用域解析器
 	 */
 	public void setScopeMetadataResolver(@Nullable ScopeMetadataResolver scopeMetadataResolver) {
 		this.scopeMetadataResolver = scopeMetadataResolver;
 	}
 
 	/**
-	 * 返回自作用域{@link ScopeMetadataResolver}解析器
+	 * 返回作用域解析器
 	 */
 	@Nullable
 	protected ScopeMetadataResolver getScopeMetadataResolver() {
@@ -141,8 +137,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
 
 	/**
-	 * 注册一个或多个@Configuration 配置类
-	 * 请注意，必须调用{@link #refresh（）}才能将@Configuration类实例，主动BeanFactory管理使上下文完全处理新类。
+	 * 注册一个或多个注解配置Bean Class
 	 */
 	@Override
 	public void register(Class<?>... annotatedClasses) {
@@ -151,7 +146,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 	}
 
 	/**
-	 * 注册扫描@Component注解定义Bean包路径
+	 * 注册扫描注解定义Bean包路径
 	 */
 	@Override
 	public void scan(String... basePackages) {
@@ -161,26 +156,7 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
 
 	/**
-	 * Register a {@link org.springframework.beans.factory.config.BeanDefinition} for
-	 * any classes specified by {@link #register(Class...)} and scan any packages
-	 * specified by {@link #scan(String...)}.
-	 * <p>For any values specified by {@link #setConfigLocation(String)} or
-	 * {@link #setConfigLocations(String[])}, attempt first to load each location as a
-	 * class, registering a {@code BeanDefinition} if class loading is successful,
-	 * and if class loading fails (i.e. a {@code ClassNotFoundException} is raised),
-	 * assume the value is a package and attempt to scan it for annotated classes.
-	 * <p>Enables the default set of annotation configuration post processors, such that
-	 * {@code @Autowired}, {@code @Required}, and associated annotations can be used.
-	 * <p>Configuration class bean definitions are registered with generated bean
-	 * definition names unless the {@code value} attribute is provided to the stereotype
-	 * annotation.
-	 * @param beanFactory the bean factory to load bean definitions into
-	 * @see #register(Class...)
-	 * @see #scan(String...)
-	 * @see #setConfigLocation(String)
-	 * @see #setConfigLocations(String[])
-	 * @see AnnotatedBeanDefinitionReader
-	 * @see ClassPathBeanDefinitionScanner
+	 * 通过AnnotatedBeanDefinitionReader/ClassPathBeanDefinitionScanner读取注解Bean,将将Bean Class其解析成BeanDefinition注册到BeanFactory
 	 */
 	@Override
 	protected void loadBeanDefinitions(DefaultListableBeanFactory beanFactory) {
@@ -242,28 +218,14 @@ public class AnnotationConfigWebApplicationContext extends AbstractRefreshableWe
 
 
 	/**
-	 * Build an {@link AnnotatedBeanDefinitionReader} for the given bean factory.
-	 * <p>This should be pre-configured with the {@code Environment} (if desired)
-	 * but not with a {@code BeanNameGenerator} or {@code ScopeMetadataResolver} yet.
-	 * @param beanFactory the bean factory to load bean definitions into
-	 * @since 4.1.9
-	 * @see #getEnvironment()
-	 * @see #getBeanNameGenerator()
-	 * @see #getScopeMetadataResolver()
+	 * 构造注解定义的Bean读取器,将Bean Class其解析成BeanDefinition注册到BeanFactory
 	 */
 	protected AnnotatedBeanDefinitionReader getAnnotatedBeanDefinitionReader(DefaultListableBeanFactory beanFactory) {
 		return new AnnotatedBeanDefinitionReader(beanFactory, getEnvironment());
 	}
 
 	/**
-	 * Build a {@link ClassPathBeanDefinitionScanner} for the given bean factory.
-	 * <p>This should be pre-configured with the {@code Environment} (if desired)
-	 * but not with a {@code BeanNameGenerator} or {@code ScopeMetadataResolver} yet.
-	 * @param beanFactory the bean factory to load bean definitions into
-	 * @since 4.1.9
-	 * @see #getEnvironment()
-	 * @see #getBeanNameGenerator()
-	 * @see #getScopeMetadataResolver()
+	 * 构造扫描ClassPath包路径中注解定义Bean读取器,将扫描获取Bean Class其解析成BeanDefinition注册到BeanFactory
 	 */
 	protected ClassPathBeanDefinitionScanner getClassPathBeanDefinitionScanner(DefaultListableBeanFactory beanFactory) {
 		return new ClassPathBeanDefinitionScanner(beanFactory, true, getEnvironment());
