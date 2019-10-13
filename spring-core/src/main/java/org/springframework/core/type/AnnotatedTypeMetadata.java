@@ -29,27 +29,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.MultiValueMap;
 
 /**
- * Defines access to the annotations of a specific type ({@link AnnotationMetadata class}
- * or {@link MethodMetadata method}), in a form that does not necessarily require the
- * class-loading.
- *
- * @author Juergen Hoeller
- * @author Mark Fisher
- * @author Mark Pollack
- * @author Chris Beams
- * @author Phillip Webb
- * @author Sam Brannen
- * @since 4.0
- * @see AnnotationMetadata
- * @see MethodMetadata
+ * 定义对特定类型（class 或 method）的注释的访问
  */
 public interface AnnotatedTypeMetadata {
 
 	/**
-	 * Return annotation details based on the direct annotations of the
-	 * underlying element.
-	 * @return merged annotations based on the direct annotations
-	 * @since 5.2
+	 * 是否
 	 */
 	MergedAnnotations getAnnotations();
 

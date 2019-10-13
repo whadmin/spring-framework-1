@@ -42,26 +42,39 @@ public abstract class AbstractTypeHierarchyTraversingFilter implements TypeFilte
 
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * 是否考虑父类匹配
+	 */
 	private final boolean considerInherited;
 
+	/**
+	 * 是否考虑接口匹配
+	 */
 	private final boolean considerInterfaces;
 
 
+	/**
+	 * 实例化
+	 */
 	protected AbstractTypeHierarchyTraversingFilter(boolean considerInherited, boolean considerInterfaces) {
 		this.considerInherited = considerInherited;
 		this.considerInterfaces = considerInterfaces;
 	}
 
 
+	/**
+	 * 匹配
+	 */
 	@Override
 	public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)
 			throws IOException {
 
-		// This method optimizes avoiding unnecessary creation of ClassReaders
-		// as well as visiting over those readers.
+		/** 判断自身特征是否匹配 **/
 		if (matchSelf(metadataReader)) {
 			return true;
 		}
+
+		/** 判断ClassName是否匹配 **/
 		ClassMetadata metadata = metadataReader.getClassMetadata();
 		if (matchClassName(metadata.getClassName())) {
 			return true;
@@ -123,28 +136,29 @@ public abstract class AbstractTypeHierarchyTraversingFilter implements TypeFilte
 		return false;
 	}
 
+	/**
+	 * TypeFilter和指定ClassName是否匹配
+	 */
 	private boolean match(String className, MetadataReaderFactory metadataReaderFactory) throws IOException {
 		return match(metadataReaderFactory.getMetadataReader(className), metadataReaderFactory);
 	}
 
 	/**
-	 * Override this to match self characteristics alone. Typically,
-	 * the implementation will use a visitor to extract information
-	 * to perform matching.
+	 * 匹配自身特征，模板方法，子类扩展实现
 	 */
 	protected boolean matchSelf(MetadataReader metadataReader) {
 		return false;
 	}
 
 	/**
-	 * Override this to match on type name.
+	 * 判断类名称是否匹配，模板方法，子类扩展实现
 	 */
 	protected boolean matchClassName(String className) {
 		return false;
 	}
 
 	/**
-	 * Override this to match on super type name.
+	 * 判断父类名称是否匹配，模板方法，子类扩展实现
 	 */
 	@Nullable
 	protected Boolean matchSuperClass(String superClassName) {
@@ -152,7 +166,7 @@ public abstract class AbstractTypeHierarchyTraversingFilter implements TypeFilte
 	}
 
 	/**
-	 * Override this to match on interface type name.
+	 * 判断接口名称是否匹配，模板方法，子类扩展实现
 	 */
 	@Nullable
 	protected Boolean matchInterface(String interfaceName) {
