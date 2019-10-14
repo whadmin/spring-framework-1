@@ -90,70 +90,70 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	static final String DEFAULT_RESOURCE_PATTERN = "**/*.class";
 
 
+	/** 日志  */
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	/** 默认扫描包路后缀   */
 	private String resourcePattern = DEFAULT_RESOURCE_PATTERN;
 
+	/** 包含类型过滤器 */
 	private final List<TypeFilter> includeFilters = new LinkedList<>();
 
+	/** 排除类型过滤器 */
 	private final List<TypeFilter> excludeFilters = new LinkedList<>();
 
+	/** 环境配置组件   */
 	@Nullable
 	private Environment environment;
 
+	/** 条件处理器 处理{@link Condition}注解，*/
 	@Nullable
 	private ConditionEvaluator conditionEvaluator;
 
+	/** 资源模式解析器，将指定资源位置路径解析为一个或多个匹配资源 */
 	@Nullable
 	private ResourcePatternResolver resourcePatternResolver;
 
+	/** MetadataReader工厂，MetadataReader用来读取元数据 */
 	@Nullable
 	private MetadataReaderFactory metadataReaderFactory;
 
+	/** 候选组件索引，用来加快检索Bean */
 	@Nullable
 	private CandidateComponentsIndex componentsIndex;
 
 
 	/**
-	 * Protected constructor for flexible subclass initialization.
-	 * @since 4.3.6
+	 * 受保护的构造函数，用于灵活的子类初始化。
 	 */
 	protected ClassPathScanningCandidateComponentProvider() {
 	}
 
-	/**
-	 * Create a ClassPathScanningCandidateComponentProvider with a {@link StandardEnvironment}.
-	 * @param useDefaultFilters whether to register the default filters for the
-	 * {@link Component @Component}, {@link Repository @Repository},
-	 * {@link Service @Service}, and {@link Controller @Controller}
-	 * stereotype annotations
-	 * @see #registerDefaultFilters()
-	 */
+
 	public ClassPathScanningCandidateComponentProvider(boolean useDefaultFilters) {
 		this(useDefaultFilters, new StandardEnvironment());
 	}
 
+
 	/**
-	 * Create a ClassPathScanningCandidateComponentProvider with the given {@link Environment}.
-	 * @param useDefaultFilters whether to register the default filters for the
-	 * {@link Component @Component}, {@link Repository @Repository},
-	 * {@link Service @Service}, and {@link Controller @Controller}
-	 * stereotype annotations
-	 * @param environment the Environment to use
-	 * @see #registerDefaultFilters()
+	 * 实例化一个新的ClassPathScanningCandidateComponentProvide
+	 * @param useDefaultFilters  指定是否使用默认TypeFilter
+	 * @param environment        指定环境配置
 	 */
 	public ClassPathScanningCandidateComponentProvider(boolean useDefaultFilters, Environment environment) {
+		/** 如果使用默认TypeFilter，将默认TypeFilter设置到includeFilters **/
 		if (useDefaultFilters) {
 			registerDefaultFilters();
 		}
+		/** 设置环境配置 */
 		setEnvironment(environment);
+		/** 设置资源加载器 */
 		setResourceLoader(null);
 	}
 
 
 	/**
-	 * Set the resource pattern to use when scanning the classpath.
-	 * This value will be appended to each base package name.
+	 * 设置默认扫描包路后缀
 	 * @see #findCandidateComponents(String)
 	 * @see #DEFAULT_RESOURCE_PATTERN
 	 */
@@ -163,26 +163,21 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Add an include type filter to the <i>end</i> of the inclusion list.
+	 * 注册一个包含TypeFilter
 	 */
 	public void addIncludeFilter(TypeFilter includeFilter) {
 		this.includeFilters.add(includeFilter);
 	}
 
 	/**
-	 * Add an exclude type filter to the <i>front</i> of the exclusion list.
+	 * 注册一个排除TypeFilter
 	 */
 	public void addExcludeFilter(TypeFilter excludeFilter) {
 		this.excludeFilters.add(0, excludeFilter);
 	}
 
 	/**
-	 * Reset the configured type filters.
-	 * @param useDefaultFilters whether to re-register the default filters for
-	 * the {@link Component @Component}, {@link Repository @Repository},
-	 * {@link Service @Service}, and {@link Controller @Controller}
-	 * stereotype annotations
-	 * @see #registerDefaultFilters()
+	 * 重置包含TypeFilter列表，排除TypeFilter列表
 	 */
 	public void resetFilters(boolean useDefaultFilters) {
 		this.includeFilters.clear();
@@ -193,12 +188,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * 注册默认类型过滤器
-	 * new AnnotationTypeFilter(Component.class)
-	 * new AnnotationTypeFilter(
-	 * 					((Class<? extends Annotation>) ClassUtils.forName("javax.inject.Named", cl)), false)
-	 * new AnnotationTypeFilter(
-	 * 					((Class<? extends Annotation>) ClassUtils.forName("javax.inject.Named", cl)), false)
+	 * 注册默认包含类型过滤器
 	 */
 	@SuppressWarnings("unchecked")
 	protected void registerDefaultFilters() {
@@ -210,7 +200,6 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			logger.trace("JSR-250 'javax.annotation.ManagedBean' found and supported for component scanning");
 		}
 		catch (ClassNotFoundException ex) {
-			// JSR-250 1.1 API (as included in Java EE 6) not available - simply skip.
 		}
 		try {
 			this.includeFilters.add(new AnnotationTypeFilter(
@@ -218,7 +207,6 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 			logger.trace("JSR-330 'javax.inject.Named' annotation found and supported for component scanning");
 		}
 		catch (ClassNotFoundException ex) {
-			// JSR-330 API not available - simply skip.
 		}
 	}
 
@@ -231,6 +219,9 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		this.conditionEvaluator = null;
 	}
 
+	/**
+	 * 返回环境配置，如果不存在设置成StandardEnvironment
+	 */
 	@Override
 	public final Environment getEnvironment() {
 		if (this.environment == null) {
@@ -240,7 +231,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Return the {@link BeanDefinitionRegistry} used by this scanner, if any.
+	 * 返回此扫描器使用的{@link BeanDefinitionRegistry}（如果有）。
 	 */
 	@Nullable
 	protected BeanDefinitionRegistry getRegistry() {
@@ -258,7 +249,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Return the ResourceLoader that this component provider uses.
+	 *返回资源加载器，如果不存在设置成PathMatchingResourcePatternResolver
 	 */
 	public final ResourceLoader getResourceLoader() {
 		return getResourcePatternResolver();
@@ -272,18 +263,14 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Set the {@link MetadataReaderFactory} to use.
-	 * <p>Default is a {@link CachingMetadataReaderFactory} for the specified
-	 * {@linkplain #setResourceLoader resource loader}.
-	 * <p>Call this setter method <i>after</i> {@link #setResourceLoader} in order
-	 * for the given MetadataReaderFactory to override the default factory.
+	 * 设置使用{@link MetadataReaderFactory}。
 	 */
 	public void setMetadataReaderFactory(MetadataReaderFactory metadataReaderFactory) {
 		this.metadataReaderFactory = metadataReaderFactory;
 	}
 
 	/**
-	 * Return the MetadataReaderFactory used by this component provider.
+	 * 返回此组件提供者使用的MetadataReaderFactory。
 	 */
 	public final MetadataReaderFactory getMetadataReaderFactory() {
 		if (this.metadataReaderFactory == null) {
@@ -294,24 +281,21 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 
 
 	/**
-	 * Scan the class path for candidate components.
-	 * @param basePackage the package to check for annotated classes
-	 * @return a corresponding Set of autodetected bean definitions
+	 * 扫描类路径以查找候选Bean。
 	 */
 	public Set<BeanDefinition> findCandidateComponents(String basePackage) {
+
 		if (this.componentsIndex != null && indexSupportsIncludeFilters()) {
 			return addCandidateComponentsFromIndex(this.componentsIndex, basePackage);
 		}
+		/** 扫描类路径以查找候选Bean。 **/
 		else {
 			return scanCandidateComponents(basePackage);
 		}
 	}
 
 	/**
-	 * Determine if the index can be used by this instance.
-	 * @return {@code true} if the index is available and the configuration of this
-	 * instance is supported by it, {@code false} otherwise
-	 * @since 5.0
+	 * 确定Indexed支持所有includeFilters
 	 */
 	private boolean indexSupportsIncludeFilters() {
 		for (TypeFilter includeFilter : this.includeFilters) {
@@ -323,11 +307,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Determine if the specified include {@link TypeFilter} is supported by the index.
-	 * @param filter the filter to check
-	 * @return whether the index supports this include filter
-	 * @since 5.0
-	 * @see #extractStereotype(TypeFilter)
+	 * 确定Indexed是否支持指定includeFilters
 	 */
 	private boolean indexSupportsIncludeFilter(TypeFilter filter) {
 		if (filter instanceof AnnotationTypeFilter) {
@@ -342,13 +322,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		return false;
 	}
 
-	/**
-	 * Extract the stereotype to use for the specified compatible filter.
-	 * @param filter the filter to handle
-	 * @return the stereotype in the index matching this filter
-	 * @since 5.0
-	 * @see #indexSupportsIncludeFilter(TypeFilter)
-	 */
+
 	@Nullable
 	private String extractStereotype(TypeFilter filter) {
 		if (filter instanceof AnnotationTypeFilter) {
@@ -525,7 +499,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 
 
 	/**
-	 * Clear the local metadata cache, if any, removing all cached class metadata.
+	 * 清理CachingMetadataReaderFactory 中MetadataReader缓存
 	 */
 	public void clearCache() {
 		if (this.metadataReaderFactory instanceof CachingMetadataReaderFactory) {

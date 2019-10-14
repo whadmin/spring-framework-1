@@ -22,7 +22,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 /**
- * 将指定资源位置路径解析为一个或多个匹配资源
+ * 资源模式解析器，将指定资源位置路径解析为一个或多个匹配资源
  */
 public interface ResourcePatternResolver extends ResourceLoader {
 
