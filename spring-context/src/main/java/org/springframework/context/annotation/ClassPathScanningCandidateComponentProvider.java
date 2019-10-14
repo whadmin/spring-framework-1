@@ -403,22 +403,32 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		return candidates;
 	}
 
+	/**
+	 * 扫描指定包路径将匹配Bean定义集合返回
+	 */
 	private Set<BeanDefinition> scanCandidateComponents(String basePackage) {
 		Set<BeanDefinition> candidates = new LinkedHashSet<>();
 		try {
+			/** 解析包路径为URL 路径  classpath*: ...**/
 			String packageSearchPath = ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX +
 					resolveBasePackage(basePackage) + '/' + this.resourcePattern;
+			/** 通过resourcePatternResolver 将指定资源位置路径解析为一个或多个匹配资源 **/
 			Resource[] resources = getResourcePatternResolver().getResources(packageSearchPath);
 			boolean traceEnabled = logger.isTraceEnabled();
 			boolean debugEnabled = logger.isDebugEnabled();
+			/** 遍历资源 **/
 			for (Resource resource : resources) {
 				if (traceEnabled) {
 					logger.trace("Scanning " + resource);
 				}
+				/** 判断资源是否可读 **/
 				if (resource.isReadable()) {
 					try {
+						/** 获取MetadataReader **/
 						MetadataReader metadataReader = getMetadataReaderFactory().getMetadataReader(resource);
+						/** 确定给定的类是否不匹配任何excludeFilters并且是否匹配至少一个includeFilters。 **/
 						if (isCandidateComponent(metadataReader)) {
+							/** 如果满足实例化 ScannedGenericBeanDefinition 添加到candidates **/
 							ScannedGenericBeanDefinition sbd = new ScannedGenericBeanDefinition(metadataReader);
 							sbd.setResource(resource);
 							sbd.setSource(resource);
@@ -455,27 +465,21 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 		catch (IOException ex) {
 			throw new BeanDefinitionStoreException("I/O failure during classpath scanning", ex);
 		}
+		/** 返回candidates **/
 		return candidates;
 	}
 
 
 	/**
-	 * Resolve the specified base package into a pattern specification for
-	 * the package search path.
-	 * <p>The default implementation resolves placeholders against system properties,
-	 * and converts a "."-based package path to a "/"-based resource path.
-	 * @param basePackage the base package as specified by the user
-	 * @return the pattern specification to be used for package searching
+	 * 将指定的基本包路径解析为URL路径
 	 */
 	protected String resolveBasePackage(String basePackage) {
 		return ClassUtils.convertClassNameToResourcePath(getEnvironment().resolveRequiredPlaceholders(basePackage));
 	}
 
 	/**
-	 * Determine whether the given class does not match any exclude filter
-	 * and does match at least one include filter.
-	 * @param metadataReader the ASM ClassReader for the class
-	 * @return whether the class qualifies as a candidate component
+	 * 确定给定的类是否不匹配任何excludeFilters并且是否匹配至少一个includeFilters。
+	 * @return 该类是否符合候选资格
 	 */
 	protected boolean isCandidateComponent(MetadataReader metadataReader) throws IOException {
 		for (TypeFilter tf : this.excludeFilters) {

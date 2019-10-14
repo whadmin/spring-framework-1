@@ -70,35 +70,29 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	private BeanNameGenerator beanNameGenerator = AnnotationBeanNameGenerator.INSTANCE;
 
 	/**
-	 * 作用域解析器 (如果注解定义的Bean配置{@link Scope}注解，通过调用resolveScopeMetadata方法解析获取作用域元数据)
+	 * Scope解析器 (处理Bean配置{@link Scope}注解，调用resolveScopeMetadata方法解析获取Scope元数据)
 	 */
 	private ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
 	/**
 	 * 是否注册 注解配置相关解析处理器
+	 * @See #AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 	 */
 	private boolean includeAnnotationConfig = true;
 
-	/**
-	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
-	 *            Environment,ResourceLoader )
-	 */
+
+
+
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry) {
 		this(registry, true);
 	}
 
-	/**
-	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
-	 *            Environment,ResourceLoader )
-	 */
+
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters) {
 		this(registry, useDefaultFilters, getOrCreateEnvironment(registry));
 	}
 
-	/**
-	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
-	 *            Environment,ResourceLoader )
-	 */
+
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters,
 			Environment environment) {
 
@@ -135,32 +129,39 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	}
 
 
+	/**
+	 * 返回BeanDefinition注册表
+	 */
 	@Override
 	public final BeanDefinitionRegistry getRegistry() {
 		return this.registry;
 	}
 
 
+	/**
+	 * 设置BeanDefinitionDefaults，如果不存设置BeanDefinitionDefaults.INSTANCE作为默认值
+	 */
 	public void setBeanDefinitionDefaults(@Nullable BeanDefinitionDefaults beanDefinitionDefaults) {
 		this.beanDefinitionDefaults =
 				(beanDefinitionDefaults != null ? beanDefinitionDefaults : new BeanDefinitionDefaults());
 	}
 
+	/**
+	 * 获取BeanDefinitionDefaults
+	 */
 	public BeanDefinitionDefaults getBeanDefinitionDefaults() {
 		return this.beanDefinitionDefaults;
 	}
 
 	/**
-	 * Set the name-matching patterns for determining autowire candidates.
-	 * @param autowireCandidatePatterns the patterns to match against
+	 * 设置扫描Bean作为类型自动装配候选，需要满足正则匹配表达式
 	 */
 	public void setAutowireCandidatePatterns(@Nullable String... autowireCandidatePatterns) {
 		this.autowireCandidatePatterns = autowireCandidatePatterns;
 	}
 
 	/**
-	 * Set the BeanNameGenerator to use for detected bean classes.
-	 * <p>Default is a {@link AnnotationBeanNameGenerator}.
+	 * 设置bean名称生成器，如果不存设置AnnotationBeanNameGenerator.INSTANCE作为默认值
 	 */
 	public void setBeanNameGenerator(@Nullable BeanNameGenerator beanNameGenerator) {
 		this.beanNameGenerator =
@@ -168,10 +169,7 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	}
 
 	/**
-	 * Set the ScopeMetadataResolver to use for detected bean classes.
-	 * Note that this will override any custom "scopedProxyMode" setting.
-	 * <p>The default is an {@link AnnotationScopeMetadataResolver}.
-	 * @see #setScopedProxyMode
+	 * 设置Scope解析器，如果不存设置AnnotationScopeMetadataResolver作为默认值
 	 */
 	public void setScopeMetadataResolver(@Nullable ScopeMetadataResolver scopeMetadataResolver) {
 		this.scopeMetadataResolver =
@@ -179,19 +177,14 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	}
 
 	/**
-	 * Specify the proxy behavior for non-singleton scoped beans.
-	 * Note that this will override any custom "scopeMetadataResolver" setting.
-	 * <p>The default is {@link ScopedProxyMode#NO}.
-	 * @see #setScopeMetadataResolver
+	 * 设置Scope解析器默认代理类型
 	 */
 	public void setScopedProxyMode(ScopedProxyMode scopedProxyMode) {
 		this.scopeMetadataResolver = new AnnotationScopeMetadataResolver(scopedProxyMode);
 	}
 
 	/**
-	 * Specify whether to register annotation config post-processors.
-	 * <p>The default is to register the post-processors. Turn this off
-	 * to be able to ignore the annotations or to process them differently.
+	 * 设置是否注册 注解配置相关解析处理器
 	 */
 	public void setIncludeAnnotationConfig(boolean includeAnnotationConfig) {
 		this.includeAnnotationConfig = includeAnnotationConfig;
@@ -199,20 +192,22 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 
 
 	/**
-	 * Perform a scan within the specified base packages.
-	 * @param basePackages the packages to check for annotated classes
-	 * @return number of beans registered
+	 * 在指定的基本程序包中执行扫描TypeFilter匹配的Bean,注册到registry
+	 * @param basePackages 包以检查带注释的类
+	 * @return 注册的bean数量
 	 */
 	public int scan(String... basePackages) {
+		/** 获取注册BeanDefinition 数量 **/
 		int beanCountAtScanStart = this.registry.getBeanDefinitionCount();
 
+		/** 在指定的基本程序包中执行扫描TypeFilter匹配的Bean,注册到registry **/
 		doScan(basePackages);
 
-		// Register annotation config processors, if necessary.
+		/** 注册 注解配置相关解析处理器 **/
 		if (this.includeAnnotationConfig) {
 			AnnotationConfigUtils.registerAnnotationConfigProcessors(this.registry);
 		}
-
+        /** 计算扫描注册BeanDefinition 数量 **/
 		return (this.registry.getBeanDefinitionCount() - beanCountAtScanStart);
 	}
 

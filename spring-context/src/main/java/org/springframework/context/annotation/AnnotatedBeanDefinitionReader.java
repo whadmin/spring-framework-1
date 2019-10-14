@@ -68,7 +68,7 @@ public class AnnotatedBeanDefinitionReader {
 	private ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
 	/**
-	 * 条件解析器 （果注解定义的Bean配置{@link Condition}注解，通过调用shouldSkip判断注解Bean能否注册到BeanFactory
+	 * 条件处理器 （处理Bean标识{@link Condition}注解，
 	 */
 	private ConditionEvaluator conditionEvaluator;
 
