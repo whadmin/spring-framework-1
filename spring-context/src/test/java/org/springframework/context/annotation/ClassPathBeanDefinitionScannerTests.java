@@ -154,7 +154,7 @@ public class ClassPathBeanDefinitionScannerTests {
 			.withMessageContaining(StubFooDao.class.getName());
 	}
 
-	@Test
+	@Test       testSimpleScanWithDefaultFiltersAndOverriddenCompatibleNamedBean
 	public void testSimpleScanWithDefaultFiltersAndOverriddenEqualNamedBean() {
 		GenericApplicationContext context = new GenericApplicationContext();
 		context.registerBeanDefinition("myNamedDao", new RootBeanDefinition(NamedStubDao.class));

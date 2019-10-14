@@ -193,14 +193,12 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Register the default filter for {@link Component @Component}.
-	 * <p>This will implicitly register all annotations that have the
-	 * {@link Component @Component} meta-annotation including the
-	 * {@link Repository @Repository}, {@link Service @Service}, and
-	 * {@link Controller @Controller} stereotype annotations.
-	 * <p>Also supports Java EE 6's {@link javax.annotation.ManagedBean} and
-	 * JSR-330's {@link javax.inject.Named} annotations, if available.
-	 *
+	 * 注册默认类型过滤器
+	 * new AnnotationTypeFilter(Component.class)
+	 * new AnnotationTypeFilter(
+	 * 					((Class<? extends Annotation>) ClassUtils.forName("javax.inject.Named", cl)), false)
+	 * new AnnotationTypeFilter(
+	 * 					((Class<? extends Annotation>) ClassUtils.forName("javax.inject.Named", cl)), false)
 	 */
 	@SuppressWarnings("unchecked")
 	protected void registerDefaultFilters() {
@@ -225,10 +223,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Set the Environment to use when resolving placeholders and evaluating
-	 * {@link Conditional @Conditional}-annotated component classes.
-	 * <p>The default is a {@link StandardEnvironment}.
-	 * @param environment the Environment to use
+	 * 设置环境配置
 	 */
 	public void setEnvironment(Environment environment) {
 		Assert.notNull(environment, "Environment must not be null");
@@ -253,12 +248,7 @@ public class ClassPathScanningCandidateComponentProvider implements EnvironmentC
 	}
 
 	/**
-	 * Set the {@link ResourceLoader} to use for resource locations.
-	 * This will typically be a {@link ResourcePatternResolver} implementation.
-	 * <p>Default is a {@code PathMatchingResourcePatternResolver}, also capable of
-	 * resource pattern resolving through the {@code ResourcePatternResolver} interface.
-	 * @see org.springframework.core.io.support.ResourcePatternResolver
-	 * @see org.springframework.core.io.support.PathMatchingResourcePatternResolver
+	 * 设置资源加载器
 	 */
 	@Override
 	public void setResourceLoader(@Nullable ResourceLoader resourceLoader) {

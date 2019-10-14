@@ -38,24 +38,21 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 
 
 	/**
-	 * Create a new SimpleMetadataReaderFactory for the default class loader.
+	 * 创建一个新的SimpleMetadataReaderFactory 设置DefaultResourceLoader作为默认资源加载器
 	 */
 	public SimpleMetadataReaderFactory() {
 		this.resourceLoader = new DefaultResourceLoader();
 	}
 
 	/**
-	 * Create a new SimpleMetadataReaderFactory for the given resource loader.
-	 * @param resourceLoader the Spring ResourceLoader to use
-	 * (also determines the ClassLoader to use)
+	 * 创建一个新的SimpleMetadataReaderFactory。指定资源加载类
 	 */
 	public SimpleMetadataReaderFactory(@Nullable ResourceLoader resourceLoader) {
 		this.resourceLoader = (resourceLoader != null ? resourceLoader : new DefaultResourceLoader());
 	}
 
 	/**
-	 * Create a new SimpleMetadataReaderFactory for the given class loader.
-	 * @param classLoader the ClassLoader to use
+	 * 创建一个新的SimpleMetadataReaderFactory。指定给定的类加载器
 	 */
 	public SimpleMetadataReaderFactory(@Nullable ClassLoader classLoader) {
 		this.resourceLoader =
@@ -64,8 +61,7 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 
 
 	/**
-	 * Return the ResourceLoader that this MetadataReaderFactory has been
-	 * constructed with.
+	 * 返回构造此MetadataReaderFactory的ResourceLoader。
 	 */
 	public final ResourceLoader getResourceLoader() {
 		return this.resourceLoader;
@@ -75,14 +71,15 @@ public class SimpleMetadataReaderFactory implements MetadataReaderFactory {
 	@Override
 	public MetadataReader getMetadataReader(String className) throws IOException {
 		try {
+			/** 获取Class文件对应URL路径 **/
 			String resourcePath = ResourceLoader.CLASSPATH_URL_PREFIX +
 					ClassUtils.convertClassNameToResourcePath(className) + ClassUtils.CLASS_FILE_SUFFIX;
+			/** 获取Class文件资源 Resource**/
 			Resource resource = this.resourceLoader.getResource(resourcePath);
+			/** 通过ClassResource获取MetadataReader **/
 			return getMetadataReader(resource);
 		}
 		catch (FileNotFoundException ex) {
-			// Maybe an inner class name using the dot name syntax? Need to use the dollar syntax here...
-			// ClassUtils.forName has an equivalent check for resolution into Class references later on.
 			int lastDotIndex = className.lastIndexOf('.');
 			if (lastDotIndex != -1) {
 				String innerClassName =

@@ -27,27 +27,22 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.lang.Nullable;
 
 /**
- * Caching implementation of the {@link MetadataReaderFactory} interface,
- * caching a {@link MetadataReader} instance per Spring {@link Resource} handle
- * (i.e. per ".class" file).
- *
- * @author Juergen Hoeller
- * @author Costin Leau
- * @since 2.5
+ * 缓存{@link MetadataReaderFactory}接口的实现，
+ * 每个Spring {@link Resource}句柄（即每个“ .class”文件）缓存{@link MetadataReader}实例。
+
  */
 public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 
-	/** Default maximum number of entries for a local MetadataReader cache: 256. */
+	/** 本地MetadataReader缓存的默认最大条目数：256。*/
 	public static final int DEFAULT_CACHE_LIMIT = 256;
 
-	/** MetadataReader cache: either local or shared at the ResourceLoader level. */
+	/** Resource 对应的 MetadataReader 缓存 */
 	@Nullable
 	private Map<Resource, MetadataReader> metadataReaderCache;
 
 
 	/**
-	 * Create a new CachingMetadataReaderFactory for the default class loader,
-	 * using a local resource cache.
+	 * 创建一个新的CachingMetadataReaderFactory。使用LocalResourceCache为默认的MetadataReader缓存
 	 */
 	public CachingMetadataReaderFactory() {
 		super();
@@ -55,9 +50,7 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 	}
 
 	/**
-	 * Create a new CachingMetadataReaderFactory for the given {@link ClassLoader},
-	 * using a local resource cache.
-	 * @param classLoader the ClassLoader to use
+	 * 创建一个新的CachingMetadataReaderFactory，指定ClassLoader，使用LocalResourceCache为默认的MetadataReader缓存
 	 */
 	public CachingMetadataReaderFactory(@Nullable ClassLoader classLoader) {
 		super(classLoader);
@@ -65,11 +58,9 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 	}
 
 	/**
-	 * Create a new CachingMetadataReaderFactory for the given {@link ResourceLoader},
-	 * using a shared resource cache if supported or a local resource cache otherwise.
-	 * @param resourceLoader the Spring ResourceLoader to use
-	 * (also determines the ClassLoader to use)
-	 * @see DefaultResourceLoader#getResourceCache
+	 * 创建一个新的CachingMetadataReaderFactory，指定ResourceLoader，
+	 * 如果ResourceLoader类型为DefaultResourceLoader，通过DefaultResourceLoader获取缓存
+	 * 否则使用LocalResourceCache为默认的MetadataReader缓存
 	 */
 	public CachingMetadataReaderFactory(@Nullable ResourceLoader resourceLoader) {
 		super(resourceLoader);
@@ -84,10 +75,7 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 
 
 	/**
-	 * Specify the maximum number of entries for the MetadataReader cache.
-	 * <p>Default is 256 for a local cache, whereas a shared cache is
-	 * typically unbounded. This method enforces a local resource cache,
-	 * even if the {@link ResourceLoader} supports a shared resource cache.
+	 * 设置缓存的默认最大条目数
 	 */
 	public void setCacheLimit(int cacheLimit) {
 		if (cacheLimit <= 0) {
@@ -102,7 +90,7 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 	}
 
 	/**
-	 * Return the maximum number of entries for the MetadataReader cache.
+	 * 返回缓存的默认最大条目数
 	 */
 	public int getCacheLimit() {
 		if (this.metadataReaderCache instanceof LocalResourceCache) {
@@ -114,10 +102,12 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 	}
 
 
+	/**
+	 * 从缓存工厂中获取MetadataReader（会优先从缓存中获取）
+	 */
 	@Override
 	public MetadataReader getMetadataReader(Resource resource) throws IOException {
 		if (this.metadataReaderCache instanceof ConcurrentMap) {
-			// No synchronization necessary...
 			MetadataReader metadataReader = this.metadataReaderCache.get(resource);
 			if (metadataReader == null) {
 				metadataReader = super.getMetadataReader(resource);
@@ -141,7 +131,7 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 	}
 
 	/**
-	 * Clear the local MetadataReader cache, if any, removing all cached class metadata.
+	 * 清除本地MetadataReader缓存， 如果有的话，删除所有缓存的类元数据。
 	 */
 	public void clearCache() {
 		if (this.metadataReaderCache instanceof LocalResourceCache) {
@@ -150,7 +140,6 @@ public class CachingMetadataReaderFactory extends SimpleMetadataReaderFactory {
 			}
 		}
 		else if (this.metadataReaderCache != null) {
-			// Shared resource cache -> reset to local cache.
 			setCacheLimit(DEFAULT_CACHE_LIMIT);
 		}
 	}

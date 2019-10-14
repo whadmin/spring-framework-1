@@ -50,15 +50,7 @@ import org.springframework.util.PatternMatchUtils;
  * <p>Also supports Java EE 6's {@link javax.annotation.ManagedBean} and
  * JSR-330's {@link javax.inject.Named} annotations, if available.
  *
- * @author Mark Fisher
- * @author Juergen Hoeller
- * @author Chris Beams
- * @since 2.5
- * @see AnnotationConfigApplicationContext#scan
- * @see org.springframework.stereotype.Component
- * @see org.springframework.stereotype.Repository
- * @see org.springframework.stereotype.Service
- * @see org.springframework.stereotype.Controller
+
  */
 public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateComponentProvider {
 
@@ -82,22 +74,31 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	 */
 	private ScopeMetadataResolver scopeMetadataResolver = new AnnotationScopeMetadataResolver();
 
+	/**
+	 * 是否注册 注解配置相关解析处理器
+	 */
 	private boolean includeAnnotationConfig = true;
 
 	/**
-	 * 为指定BeanDefinitionRegistry实例化一个新的{@code AnnotatedBeanDefinitionReader}
+	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
+	 *            Environment,ResourceLoader )
 	 */
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry) {
 		this(registry, true);
 	}
 
-
-
+	/**
+	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
+	 *            Environment,ResourceLoader )
+	 */
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters) {
 		this(registry, useDefaultFilters, getOrCreateEnvironment(registry));
 	}
 
-
+	/**
+	 * @see #ClassPathBeanDefinitionScanner(BeanDefinitionRegistry,boolean,
+	 *            Environment,ResourceLoader )
+	 */
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters,
 			Environment environment) {
 
@@ -106,41 +107,45 @@ public class ClassPathBeanDefinitionScanner extends ClassPathScanningCandidateCo
 	}
 
 
+	/**
+	 * 实例化一个新的ClassPathBeanDefinitionScanner
+	 * @param registry 指定BeanDefinitionRegistry(注册表)
+	 * @param useDefaultFilters 是否使用默认注解过滤器
+	 * @param environment    指定环境配置
+	 * @param resourceLoader 指定资源加载器
+	 */
 	public ClassPathBeanDefinitionScanner(BeanDefinitionRegistry registry, boolean useDefaultFilters,
 			Environment environment, @Nullable ResourceLoader resourceLoader) {
 
+		/** 断言registry 不能为Null **/
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null");
+
+		/** 设置BeanDefinitionRegistry(注册表) **/
 		this.registry = registry;
 
+		/** 如果使用默认注解过滤器， **/
 		if (useDefaultFilters) {
+			/**  注册默认类型过滤器 */
 			registerDefaultFilters();
 		}
+		/** 设置环境配置 **/
 		setEnvironment(environment);
+		/** 设置资源加载器 **/
 		setResourceLoader(resourceLoader);
 	}
 
 
-	/**
-	 * Return the BeanDefinitionRegistry that this scanner operates on.
-	 */
 	@Override
 	public final BeanDefinitionRegistry getRegistry() {
 		return this.registry;
 	}
 
-	/**
-	 * Set the defaults to use for detected beans.
-	 * @see BeanDefinitionDefaults
-	 */
+
 	public void setBeanDefinitionDefaults(@Nullable BeanDefinitionDefaults beanDefinitionDefaults) {
 		this.beanDefinitionDefaults =
 				(beanDefinitionDefaults != null ? beanDefinitionDefaults : new BeanDefinitionDefaults());
 	}
 
-	/**
-	 * Return the defaults to use for detected beans (never {@code null}).
-	 * @since 4.1
-	 */
 	public BeanDefinitionDefaults getBeanDefinitionDefaults() {
 		return this.beanDefinitionDefaults;
 	}

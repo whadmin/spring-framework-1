@@ -179,12 +179,10 @@ public abstract class AbstractMethodMetadataTests {
 	}
 
 	public static class WithFinalMethod {
-
 		@Tag
 		public final String test() {
 			return "";
 		}
-
 	}
 
 	public static class WithPrivateMethod {

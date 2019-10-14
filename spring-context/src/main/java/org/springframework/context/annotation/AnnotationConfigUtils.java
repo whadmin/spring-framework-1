@@ -137,7 +137,7 @@ public abstract class AnnotationConfigUtils {
 	}
 
 	/**
-	 * 注册注解配置处理器器
+	 * 注册 “注解配置处理器”
 	 */
 	public static Set<BeanDefinitionHolder> registerAnnotationConfigProcessors(
 			BeanDefinitionRegistry registry, @Nullable Object source) {
