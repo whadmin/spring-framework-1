@@ -34,18 +34,15 @@ import org.springframework.util.MultiValueMap;
 public interface AnnotatedTypeMetadata {
 
 	/**
-	 * 是否
+	 * 返回直接修饰基础元素的注解迭代器。迭代器中的注解都是经过合并处理的
+	 * @从5.2开始
 	 */
 	MergedAnnotations getAnnotations();
 
 	/**
-	 * Determine whether the underlying element has an annotation or meta-annotation
-	 * of the given type defined.
-	 * <p>If this method returns {@code true}, then
-	 * {@link #getAnnotationAttributes} will return a non-null Map.
-	 * @param annotationName the fully qualified class name of the annotation
-	 * type to look for
-	 * @return whether a matching annotation is defined
+	 * 确定基础元素是否具有定义的给定类型的注解或其元注释。
+	 * @param annotationName 要查找的注解类型的标准类名
+	 * @return 是否定义了匹配的注解
 	 */
 	default boolean isAnnotated(String annotationName) {
 		return getAnnotations().isPresent(annotationName);

@@ -41,9 +41,7 @@ import org.springframework.core.annotation.MergedAnnotations.SearchStrategy;
 public interface AnnotationMetadata extends ClassMetadata, AnnotatedTypeMetadata {
 
 	/**
-	 * Get the fully qualified class names of all annotation types that
-	 * are <em>present</em> on the underlying class.
-	 * @return the annotation type names
+	 *  获取在基础类上<em>存在</ em>的所有注释类型的标准类名。
 	 */
 	default Set<String> getAnnotationTypes() {
 		return getAnnotations().stream()
