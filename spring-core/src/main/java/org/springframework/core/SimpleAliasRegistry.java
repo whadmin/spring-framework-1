@@ -214,7 +214,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * 获取别规范名称（会递归调用规范名称作为别名）
+	 * 获取name作为别名对应bean名称（会递归调用规范名称作为别名）
 	 *
 	 * registry.registerAlias("test", "testAlias");
 	 * registry.registerAlias("testAlias", "testAlias2");

@@ -229,7 +229,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 	/**
 	 * 根据参数返回bean实例
-	 * @param name 要获取 Bean 的名字
+	 * @param name 要获取 Bean 的名字 或 别名
 	 * @param requiredType 要获取 bean Class类型
 	 * @param args 创建 Bean 时传递的参数
 	 * @param typeCheckOnly 是否仅仅进行类型检查
@@ -239,11 +239,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@SuppressWarnings("unchecked")
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
 			@Nullable final Object[] args, boolean typeCheckOnly) throws BeansException {
-		/** 返回规范Bean名称，剥离BeanFactory.FACTORY_BEAN_PREFIX，如果name为别名解析为规范名称。**/
+
+		/** 获取name作为别名对应bean名称 **/
 		final String beanName = transformedBeanName(name);
 		Object bean;
 
-		/** 1 从单例bean对象缓存中获取bean实例 **/
+		/** 1 从已实例化单例bean对象缓存中获取bean实例 **/
 		Object sharedInstance = getSingleton(beanName);
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
@@ -1193,19 +1194,25 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	//---------------------------------------------------------------------
 
 	/**
-	 * 对Bean名称改造，去除工厂取消引用前缀，并将别名解析为规范名称。
+	 * 获取name作为别名对应bean名称
+	 * 对于存在&前缀name需要先剥离后调用canonicalName获取bean名称
 	 */
 	protected String transformedBeanName(String name) {
 		return canonicalName(BeanFactoryUtils.transformedBeanName(name));
 	}
 
+
 	/**
-	 * 获取Bean名称，并将别名解析为规范名称。
-	 * @param name the user-specified name
-	 * @return the original bean name
+	 * 获取name作为别名对应bean名称
+	 * 对于存在&前缀name需要先剥离后调用canonicalName获取规范名称，并在获取规范名称后将&前缀追加到规范名称前
 	 */
 	protected String originalBeanName(String name) {
+		/**
+		 * 获取name作为别名对应bean名称
+		 * 对于存在&前缀name需要先剥离后调用canonicalName获取bean名称
+		 **/
 		String beanName = transformedBeanName(name);
+		/** 如果存在&前缀，在获取bean名称后将&前缀追加到bean名称前 **/
 		if (name.startsWith(FACTORY_BEAN_PREFIX)) {
 			beanName = FACTORY_BEAN_PREFIX + beanName;
 		}
