@@ -329,7 +329,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
 	//-------------------------------------------------------------------------
-	// Specialized methods for fine-grained control over the bean lifecycle
+	// 专门的方法可以对bean的生命周期进行细粒度的控制
 	//-------------------------------------------------------------------------
 
 	@Override
@@ -389,11 +389,17 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		applyPropertyValues(beanName, bd, bw, bd.getPropertyValues());
 	}
 
+	/**
+	 * 初始化Bean
+	 */
 	@Override
 	public Object initializeBean(Object existingBean, String beanName) {
 		return initializeBean(beanName, existingBean, null);
 	}
 
+	/**
+	 * 执行所有注册BeanPostProcessor.postProcessBeforeInitialization
+	 */
 	@Override
 	public Object applyBeanPostProcessorsBeforeInitialization(Object existingBean, String beanName)
 			throws BeansException {
@@ -409,6 +415,9 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		return result;
 	}
 
+	/**
+	 * 执行所有注册BeanPostProcessor.postProcessAfterInitialization
+	 */
 	@Override
 	public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
 			throws BeansException {
@@ -1981,10 +1990,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
 	/**
-	 * Applies the {@code postProcessAfterInitialization} callback of all
-	 * registered BeanPostProcessors, giving them a chance to post-process the
-	 * object obtained from FactoryBeans (for example, to auto-proxy them).
-	 * @see #applyBeanPostProcessorsAfterInitialization
+	 * 实现父类FactoryBeanRegistrySupport 模板 扩展从指定的FactoryBean中获取object
+	 * 执行所有注册BeanPostProcessor.postProcessAfterInitialization
 	 */
 	@Override
 	protected Object postProcessObjectFromFactoryBean(Object object, String beanName) {

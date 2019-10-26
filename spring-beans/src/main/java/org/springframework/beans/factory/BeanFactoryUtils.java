@@ -61,8 +61,7 @@ public abstract class BeanFactoryUtils {
 
 
 	/**
-	 * 返回bean名称是否存在 BeanFactory#FACTORY_BEAN_PREFIX前缀，来表示当前bean class类型为BeanFactory
-	 * @param name bean 名称
+	 * 返回bean名称是否存在“&”前缀
 	 */
 	public static boolean isFactoryDereference(@Nullable String name) {
 		return (name != null && name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));
