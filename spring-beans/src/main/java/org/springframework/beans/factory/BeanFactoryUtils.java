@@ -69,7 +69,7 @@ public abstract class BeanFactoryUtils {
 	}
 
 	/**
-	 * 返回实际的bean名称，剥离BeanFactory.FACTORY_BEAN_PREFIX
+	 * 改造bean名称，剥离BeanFactory.FACTORY_BEAN_PREFIX前缀，放入transformedBeanNameCache缓存
 	 */
 	public static String transformedBeanName(String name) {
 		Assert.notNull(name, "'name' must not be null");

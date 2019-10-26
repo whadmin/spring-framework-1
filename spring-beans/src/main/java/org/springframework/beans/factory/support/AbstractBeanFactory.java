@@ -1193,7 +1193,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	//---------------------------------------------------------------------
 
 	/**
-	 * 返回Bean名称，必要时去除工厂取消引用前缀，并将别名解析为规范名称。
+	 * 对Bean名称改造，去除工厂取消引用前缀，并将别名解析为规范名称。
 	 */
 	protected String transformedBeanName(String name) {
 		return canonicalName(BeanFactoryUtils.transformedBeanName(name));

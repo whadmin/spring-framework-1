@@ -30,23 +30,20 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
 /**
- * Simple implementation of the {@link AliasRegistry} interface.
- * Serves as base class for
- * {@link org.springframework.beans.factory.support.BeanDefinitionRegistry}
- * implementations.
- *
- * @author Juergen Hoeller
+ * {@link AliasRegistry}接口的简单实现。, 作为基础类
  * @since 2.5.2
  */
 public class SimpleAliasRegistry implements AliasRegistry {
 
-	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	/** Map from alias to canonical name. */
+	/** 从别名 -- 规范名称 映射 */
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
 
+	/**
+	 * 注册规范名称 对应 别名
+	 */
 	@Override
 	public void registerAlias(String name, String alias) {
 		Assert.hasText(name, "'name' must not be empty");
@@ -84,18 +81,15 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * Return whether alias overriding is allowed.
-	 * Default is {@code true}.
+	 * 返回是否允许别名覆盖。, 默认值为{@code true}。
 	 */
 	protected boolean allowAliasOverriding() {
 		return true;
 	}
 
+
 	/**
-	 * Determine whether the given name has the given alias registered.
-	 * @param name the name to check
-	 * @param alias the alias to look for
-	 * @since 4.2.1
+	 * 确定给定名称是否已注册给定别名。
 	 */
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
@@ -110,6 +104,9 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		return false;
 	}
 
+	/**
+	 * 删除别名
+	 */
 	@Override
 	public void removeAlias(String alias) {
 		synchronized (this.aliasMap) {
@@ -120,11 +117,18 @@ public class SimpleAliasRegistry implements AliasRegistry {
 		}
 	}
 
+	/**
+	 * 是否存在此别名
+	 */
 	@Override
 	public boolean isAlias(String name) {
 		return this.aliasMap.containsKey(name);
 	}
 
+
+	/**
+	 * 返回名称对应所有别名
+	 */
 	@Override
 	public String[] getAliases(String name) {
 		List<String> result = new ArrayList<>();
@@ -135,14 +139,13 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * Transitively retrieve all aliases for the given name.
-	 * @param name the target name to find aliases for
-	 * @param result the resulting aliases list
+	 * 获取给定名称的所有别名
 	 */
 	private void retrieveAliases(String name, List<String> result) {
 		this.aliasMap.forEach((alias, registeredName) -> {
 			if (registeredName.equals(name)) {
 				result.add(alias);
+				/** 执行递归，获取别名作为规范名称 对应的别名 **/
 				retrieveAliases(alias, result);
 			}
 		});
