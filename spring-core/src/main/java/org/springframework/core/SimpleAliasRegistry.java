@@ -89,6 +89,14 @@ public class SimpleAliasRegistry implements AliasRegistry {
 
 	/**
 	 * 确定给定名称是否已注册给定别名（会递归检查规范名称作为别名是否注册给定别名）
+	 *
+	 * registry.registerAlias("test", "testAlias");
+	 * registry.registerAlias("testAlias", "testAlias2");
+	 * registry.registerAlias("testAlias2", "testAlias3");
+	 *
+	 * assertThat(registry.hasAlias("test", "testAlias")).isTrue();
+	 * assertThat(registry.hasAlias("test", "testAlias2")).isTrue();
+	 * assertThat(registry.hasAlias("test", "testAlias3")).isTrue();
 	 */
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
@@ -206,7 +214,15 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * 确定原始名称，将别名解析为规范名称
+	 * 获取别规范名称（会递归调用规范名称作为别名）
+	 *
+	 * registry.registerAlias("test", "testAlias");
+	 * registry.registerAlias("testAlias", "testAlias2");
+	 * registry.registerAlias("testAlias2", "testAlias3");
+	 *
+	 * assertThat(registry.canonicalName("testAlias")).isSameAs("test");
+	 * assertThat(registry.canonicalName("testAlias2")).isSameAs("test");
+	 * assertThat(registry.canonicalName("testAlias3")).isSameAs("test");
 	 */
 	public String canonicalName(String name) {
 		String canonicalName = name;
