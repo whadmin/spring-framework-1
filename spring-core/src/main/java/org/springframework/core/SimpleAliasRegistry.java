@@ -42,7 +42,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 
 
 	/**
-	 * 注册规范名称 对应 别名
+	 * 注册别名
 	 */
 	@Override
 	public void registerAlias(String name, String alias) {
@@ -59,7 +59,6 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
 					if (registeredName.equals(name)) {
-						// An existing alias - no need to re-register
 						return;
 					}
 					if (!allowAliasOverriding()) {
@@ -81,7 +80,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * 返回是否允许别名覆盖。, 默认值为{@code true}。
+	 * 返回是否允许别名覆盖。默认值为{@code true}。
 	 */
 	protected boolean allowAliasOverriding() {
 		return true;
@@ -89,13 +88,14 @@ public class SimpleAliasRegistry implements AliasRegistry {
 
 
 	/**
-	 * 确定给定名称是否已注册给定别名。
+	 * 确定给定名称是否已注册给定别名（会递归检查规范名称作为别名是否注册给定别名）
 	 */
 	public boolean hasAlias(String name, String alias) {
 		for (Map.Entry<String, String> entry : this.aliasMap.entrySet()) {
 			String registeredName = entry.getValue();
 			if (registeredName.equals(name)) {
 				String registeredAlias = entry.getKey();
+				/** 递归规范名称作为别名的时是否存在此别名**/
 				if (registeredAlias.equals(alias) || hasAlias(registeredAlias, alias)) {
 					return true;
 				}
@@ -152,22 +152,23 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * Resolve all alias target names and aliases registered in this
-	 * factory, applying the given StringValueResolver to them.
-	 * <p>The value resolver may for example resolve placeholders
-	 * in target bean names and even in alias names.
-	 * @param valueResolver the StringValueResolver to apply
+	 * 通过StringValueResolver解析所有别名和规则名称
 	 */
 	public void resolveAliases(StringValueResolver valueResolver) {
 		Assert.notNull(valueResolver, "StringValueResolver must not be null");
 		synchronized (this.aliasMap) {
 			Map<String, String> aliasCopy = new HashMap<>(this.aliasMap);
+			/** 遍历别名 -- 规范名称映射 **/
 			aliasCopy.forEach((alias, registeredName) -> {
+				/** 通过StringValueResolver解析器解析别名，规范名称  **/
 				String resolvedAlias = valueResolver.resolveStringValue(alias);
 				String resolvedName = valueResolver.resolveStringValue(registeredName);
+
+				/** 解析后别名和规则名称满足下面条件从 映射中删除 **/
 				if (resolvedAlias == null || resolvedName == null || resolvedAlias.equals(resolvedName)) {
 					this.aliasMap.remove(alias);
 				}
+				/** 解析后别名和原始别名不相同 **/
 				else if (!resolvedAlias.equals(alias)) {
 					String existingName = this.aliasMap.get(resolvedAlias);
 					if (existingName != null) {
@@ -185,6 +186,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 					this.aliasMap.remove(alias);
 					this.aliasMap.put(resolvedAlias, resolvedName);
 				}
+				/** 解析后规则名称和原始规范名称不相同 **/
 				else if (!registeredName.equals(resolvedName)) {
 					this.aliasMap.put(alias, resolvedName);
 				}
@@ -193,13 +195,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * Check whether the given name points back to the given alias as an alias
-	 * in the other direction already, catching a circular reference upfront
-	 * and throwing a corresponding IllegalStateException.
-	 * @param name the candidate name
-	 * @param alias the candidate alias
-	 * @see #registerAlias
-	 * @see #hasAlias
+	 * 检查给定名称是否已注册给定别名（会递归检查规范名称作为别名是否注册给定别名），如果存在抛出异常
 	 */
 	protected void checkForAliasCircle(String name, String alias) {
 		if (hasAlias(alias, name)) {
@@ -214,7 +210,6 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	 */
 	public String canonicalName(String name) {
 		String canonicalName = name;
-		// Handle aliasing...
 		String resolvedName;
 		do {
 			resolvedName = this.aliasMap.get(canonicalName);
