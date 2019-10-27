@@ -146,8 +146,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	private final Set<Class<?>> ignoredDependencyTypes = new HashSet<>();
 
 	/**
-	 * Dependency interfaces to ignore on dependency check and autowire, as Set of
-	 * Class objects. By default, only the BeanFactory interface is ignored.
+	 * 依赖关系接口忽略作为类对象集的依赖关系检查和自动装配。, 默认情况下，仅BeanFactory接口被忽略。
 	 */
 	private final Set<Class<?>> ignoredDependencyInterfaces = new HashSet<>();
 
@@ -156,19 +155,19 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	 */
 	private final NamedThreadLocal<String> currentlyCreatedBean = new NamedThreadLocal<>("Currently created bean");
 
-	/** Cache of unfinished FactoryBean instances: FactoryBean name to BeanWrapper. */
+	/** BeanWrapper 缓存 */
 	private final ConcurrentMap<String, BeanWrapper> factoryBeanInstanceCache = new ConcurrentHashMap<>();
 
-	/** Cache of candidate factory methods per factory class. */
+	/** 工厂方法  缓存  */
 	private final ConcurrentMap<Class<?>, Method[]> factoryMethodCandidateCache = new ConcurrentHashMap<>();
 
-	/** Cache of filtered PropertyDescriptors: bean Class to PropertyDescriptor array. */
+	/** PropertyDescriptor 缓存  */
 	private final ConcurrentMap<Class<?>, PropertyDescriptor[]> filteredPropertyDescriptorsCache =
 			new ConcurrentHashMap<>();
 
 
 	/**
-	 * Create a new AbstractAutowireCapableBeanFactory.
+	 * 创建一个新的AbstractAutowireCapableBeanFactory。
 	 */
 	public AbstractAutowireCapableBeanFactory() {
 		super();
@@ -536,36 +535,32 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
 			throws BeanCreationException {
 
-		/**  定义bean包装对象 instanceWrapper **/
+		/**  定义 instanceWrapper(bean实例包装对象) **/
 		BeanWrapper instanceWrapper = null;
 
-		/**
-		 * 判断RootBeanDefinition模板中定义bean类型是否是单例，
-		 * 如果是单例从factoryBeanInstanceCache缓存中删除指定beanName 映射的 BeanWrapper
-		 **/
+		/** 如果单例，从BeanWrapper 缓存中删除 **/
 		if (mbd.isSingleton()) {
 			instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);
 		}
 
-		/** 使用合适的实例化策略来创建 bean包装对象 instanceWrapper **/
+		/** 根据指定bean 使用对应的策略创建bean实例包装对象， 其策略由于 工厂方法、默认构造函，参数构造函数 **/
 		if (instanceWrapper == null) {
-			/** 根据指定bean 使用对应的策略创建新的实例， 如· 工厂方法、构造函数自动注入 **/
 			instanceWrapper = createBeanInstance(beanName, mbd, args);
 		}
 
-		/** 从bean包装对象instanceWrapper 获取bean实例对象  **/
+		/** 获取bean实例对象  **/
 		final Object bean = instanceWrapper.getWrappedInstance();
 
-		/** 从bean包装对象instanceWrapper 获取bean实例对象Class类型  **/
+		/** 获取bean实例对象Class类型  **/
 		Class<?> beanType = instanceWrapper.getWrappedClass();
 
-		/** BeanDefinition设置bean实例对象Class类型 **/
+		/** 设置 resolvedTargetType **/
 		if (beanType != NullBean.class) {
 			mbd.resolvedTargetType = beanType;
 		}
 
 		/**
-		 * 在实例化bean后，依赖注入前，执行BeanPostProcessor 扩展点
+		 * 依赖注入前，BeanPostProcessor 扩展点 在实例化bean后
 		 * 执行MergedBeanDefinitionPostProcessor.postProcessMergedBeanDefinition，用来对合并后RootBeanDefinition做增强处理
  		 */
 		synchronized (mbd.postProcessingLock) {
