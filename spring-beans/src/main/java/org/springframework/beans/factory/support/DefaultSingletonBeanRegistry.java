@@ -124,13 +124,13 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	 */
 	private final Map<String, Object> disposableBeans = new LinkedHashMap<>();
 
-	/** 在包含的Bean名称之间映射：Bean名称到Bean包含的Bean名称集。 */
+	/** 存储包含关系：beanName - > 被包含 beanName 的集合  */
 	private final Map<String, Set<String>> containedBeanMap = new ConcurrentHashMap<>(16);
 
-	/** 保存的是依赖 beanName 之间的映射关系：beanName - > 依赖 beanName 的集合 */
+	/** 存储依赖关系 ：依赖beanName - > 被依赖 beanName 的集合 */
 	private final Map<String, Set<String>> dependentBeanMap = new ConcurrentHashMap<>(64);
 
-	/** 保存的是依赖 beanName 之间的映射关系：依赖 beanName - > beanName 的集合,dependentBeanMap反相存储 */
+	/** 存储反相依赖关系  ：被依赖 beanName - > 依赖 beanName 的集合,dependentBeanMap反相存储 */
 	private final Map<String, Set<String>> dependenciesForBeanMap = new ConcurrentHashMap<>(64);
 
 	//---------------------------------------------------------------------
@@ -496,7 +496,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		if (alreadySeen != null && alreadySeen.contains(beanName)) {
 			return false;
 		}
-		/** 确定原始名称，将别名解析为规范名称 **/
+		/** 获取name作为别名对应bean名称 **/
 		String canonicalName = canonicalName(beanName);
 
 		/** 获取当前 beanName 的依赖集合 **/

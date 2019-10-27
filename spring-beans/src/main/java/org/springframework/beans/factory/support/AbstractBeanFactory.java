@@ -238,7 +238,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		/** 1 从单例bean对象缓存中获取获取指定beanName名称对应bean实例 **/
 		Object sharedInstance = getSingleton(beanName);
 
-		/** 1.1 单例bean对象缓存中存在bean实例 **/
+		/** 2.1 单例bean对象缓存中存在 获取bean对象**/
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -249,25 +249,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					logger.trace("Returning cached instance of singleton bean '" + beanName + "'");
 				}
 			}
-			/** 2 从bean实例获取构造对象（处理FactoryBean逻辑） **/
+			/** 2 获取bean对象，这里主要是针对实现FactoryBean接口特殊Bean处理 **/
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
-		/** 1.2 单例bean对象缓存中不存在bean实例 **/
+		/** 2.2 单例bean对象缓存中不存在bean实例 **/
 		else {
-			/** 原型模式依赖检查 Spring 只处理单例模式下得循环依赖，对于原型模式的循环依赖直接抛出异常 **/
-			/** 检测逻辑和单例模式一样，一个“集合”存放着正在创建的 原型模式Bean，如果存在集合中表示发生循环依赖 **/
+			/** 2.2.1 检查beanName是否作为beanName原型bean是否当前正在创建（在当前线程内）。发生循环依赖**/
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
-			/** 从 parentBeanFactory 获取 Bean **/
+			/** 2.2.2 如果当前beanName并未注册BeanDefinition且存在父parentBeanFactory，尝试从父parentBeanFactory获取Bean **/
 			BeanFactory parentBeanFactory = getParentBeanFactory();
-			/** 如果当前BeanFactory容器中没有找到，则从父类BeanFactory容器中加载 **/
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-				/**  获取Bean名称，并将别名解析为规范名称。  **/
 				String nameToLookup = originalBeanName(name);
-
-				/** 从从 parentBeanFactory 获取 Bean **/
 				if (parentBeanFactory instanceof AbstractBeanFactory) {
 					return ((AbstractBeanFactory) parentBeanFactory).doGetBean(
 							nameToLookup, requiredType, args, typeCheckOnly);
@@ -283,19 +278,18 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-			/** 除了类型检查，还做其他检查 **/
+			/** 2.2.3 执行其他检查 **/
 			if (!typeCheckOnly) {
-				/** 将指定的beanName 标记为已创建 **/
+				/** 将beanName  标记为已创建 **/
 				markBeanAsCreated(beanName);
 			}
 
 			try {
-				/** 从容器中获取 beanName 相应的 RootBeanDefinition 对象
-				 * 每个Bean的创建需要的是一个RootBeanDefinition，也就是需要基于原始BeanDefinition及其双亲BeanDefinition信息得到"合并"之后的BeanDefinition；**/
+				/** 2.2.4 获取指定beanName  BeanDefinition（合并的），并检查 BeanDefinition 非抽象 **/
 				final RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 				checkMergedBeanDefinition(mbd, beanName, args);
 
-				/**  处理所依赖的 bean  **/
+				/** 2.2.5  处理beanName 依赖DependsOn  **/
 				String[] dependsOn = mbd.getDependsOn();
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
@@ -319,7 +313,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 				}
 
-				/** 判断是否是单例模式 **/
+				/** 2.2.6.1   如果是单例bean **/
 				if (mbd.isSingleton()) {
 					/** 从单例bean对象缓存中获取bean对象，如果不存在调用createBean创建 **/
 					sharedInstance = getSingleton(beanName, () -> {
@@ -393,7 +387,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 
-		/** 检查所需的类型是否与实际bean实例的类型匹配。如果不匹配使用TypeConverter尝试进行类型转换 **/
+		/** 3 检查所需的类型是否与实际bean实例的类型匹配。如果不匹配使用TypeConverter尝试进行类型转换 **/
 		if (requiredType != null && !requiredType.isInstance(bean)) {
 			try {
 				T convertedBean = getTypeConverter().convertIfNecessary(bean, requiredType);
@@ -1361,7 +1355,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 
 	/**
-	 * 获取指定beanName  BeanDefinition（合并后的）
+	 * 获取指定beanName BeanDefinition（合并后的）
 	 */
 	protected RootBeanDefinition getMergedLocalBeanDefinition(String beanName) throws BeansException {
 		/** 从缓存中获取 **/
@@ -1798,7 +1792,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			synchronized (this.mergedBeanDefinitions) {
 				/** double check 如果beanName不存在已创建名称集合 **/
 				if (!this.alreadyCreated.contains(beanName)) {
-					/** 从RootBeanDefinition缓存中删除指定beanName **/
+					/** 从合并后BeanDefinitions缓存删除指定beanName **/
 					clearMergedBeanDefinition(beanName);
 					/** 添加到已创建名称集合 **/
 					this.alreadyCreated.add(beanName);
