@@ -416,7 +416,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * 执行所有注册BeanPostProcessor.postProcessAfterInitialization
+	 * BeanPostProcessor 扩展点，
 	 */
 	@Override
 	public Object applyBeanPostProcessorsAfterInitialization(Object existingBean, String beanName)
@@ -499,7 +499,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Validation of method overrides failed", ex);
 		}
         /**
-		 * BeanPostProcessor 扩展点
+		 * BeanPostProcessor 扩展点 实现类型为
 		 * 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation
 		 */
 		try {
@@ -531,18 +531,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Actually create the specified bean. Pre-creation processing has already happened
-	 * at this point, e.g. checking {@code postProcessBeforeInstantiation} callbacks.
-	 * <p>Differentiates between default bean instantiation, use of a
-	 * factory method, and autowiring a constructor.
-	 * @param beanName the name of the bean
-	 * @param mbd the merged bean definition for the bean
-	 * @param args explicit arguments to use for constructor or factory method invocation
-	 * @return a new instance of the bean
-	 * @throws BeanCreationException if the bean could not be created
-	 * @see #instantiateBean
-	 * @see #instantiateUsingFactoryMethod
-	 * @see #autowireConstructor
+	 * 实际创建指定的bean。此时已经进行了预创建处理，例如，检查{@code postprocessionbeforeintification}回调。<p>区分默认bean实例化、工厂方法的使用和自动连接构造函数。
 	 */
 	protected Object doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
 			throws BeanCreationException {
@@ -613,10 +602,12 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));
 		}
 
-		// Initialize the bean instance.
+
 		Object exposedObject = bean;
 		try {
+			/** 2 注入 Bean **/
 			populateBean(beanName, mbd, instanceWrapper);
+			/** 3 初始化 Bean **/
 			exposedObject = initializeBean(beanName, exposedObject, mbd);
 		}
 		catch (Throwable ex) {
@@ -1115,8 +1106,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * BeanPostProcessor 扩展点
-	 * 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation
+	 * BeanPostProcessor 扩展点，
+	 *   1 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation 目标对象实例化之前调用，
+	 *     该方法的返回值类型是Object，这个返回值可以用来代替原本该生成的目标对象的实例(比如代理对象)
+	 *       后续只有postProcessAfterInitialization方法会调用
+	 *   2 如果该方法的返回值不为Null, 调用 InstantiationAwareBeanPostProcessor.postProcessAfterInstantiation  目标对象实例化之后调用
 	 */
 	@Nullable
 	protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
@@ -1801,21 +1795,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
 
 	/**
-	 * Initialize the given bean instance, applying factory callbacks
-	 * as well as init methods and bean post processors.
-	 * <p>Called from {@link #createBean} for traditionally defined beans,
-	 * and from {@link #initializeBean} for existing bean instances.
-	 * @param beanName the bean name in the factory (for debugging purposes)
-	 * @param bean the new bean instance we may need to initialize
-	 * @param mbd the bean definition that the bean was created with
-	 * (can also be {@code null}, if given an existing bean instance)
-	 * @return the initialized bean instance (potentially wrapped)
-	 * @see BeanNameAware
-	 * @see BeanClassLoaderAware
-	 * @see BeanFactoryAware
-	 * @see #applyBeanPostProcessorsBeforeInitialization
-	 * @see #invokeInitMethods
-	 * @see #applyBeanPostProcessorsAfterInitialization
+	 * 初始化给定的bean实例, 应用工厂回调以及init方法和bean后处理器。
 	 */
 	protected Object initializeBean(final String beanName, final Object bean, @Nullable RootBeanDefinition mbd) {
 		/** 1 对实现Aware子接口BeanNameAware、BeanClassLoaderAware、BeanFactoryAware特殊的bean，调用接口实现方法 **/
@@ -1830,15 +1810,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 
 		/**
-		 * bean初始化前。
-		 * BeanPostProcessor 扩展点
-		 * 执行BeanPostProcessor.postProcessBeforeInitialization，用来对bean初始化前bean对象做增强处理
+		 *
+		 * BeanPostProcessor 扩展点 bean初始化前。
+		 * 回调 BeanPostProcessor.postProcessBeforeInitialization，用来对bean初始化前bean对象做增强处理
 		 */
 		Object wrappedBean = bean;
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
 		}
 
+		/**
+		 * 执行初始化方法
+		 *  1 对实现InitializingBean接口特殊的bean，回调afterPropertiesSet()
+		 *  2 调用自定义初始化方法 mbd.getInitMethodName()
+		 */
 		try {
 			invokeInitMethods(beanName, wrappedBean, mbd);
 		}
@@ -1848,9 +1833,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					beanName, "Invocation of init method failed", ex);
 		}
 		/**
-		 * bean初始化前。
-		 * BeanPostProcessor 扩展点
-		 * 执行BeanPostProcessor.postProcessBeforeInitialization，用来对bean初始化后bean对象做增强处理
+		 * BeanPostProcessor 扩展点  bean初始化后。
+		 * 回调 BeanPostProcessor.postProcessBeforeInitialization，用来对bean初始化后bean对象做增强处理
 		 */
 		if (mbd == null || !mbd.isSynthetic()) {
 			wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
@@ -1860,7 +1844,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * 对实现Aware子接口BeanNameAware、BeanClassLoaderAware、BeanFactoryAware特殊的bean，调用接口实现方法
+	 * 实现Aware子接口BeanNameAware、BeanClassLoaderAware、BeanFactoryAware特殊的bean，执行接口方法回调
 	 */
 	private void invokeAwareMethods(final String beanName, final Object bean) {
 		if (bean instanceof Aware) {
@@ -1880,20 +1864,14 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Give a bean a chance to react now all its properties are set,
-	 * and a chance to know about its owning bean factory (this object).
-	 * This means checking whether the bean implements InitializingBean or defines
-	 * a custom init method, and invoking the necessary callback(s) if it does.
-	 * @param beanName the bean name in the factory (for debugging purposes)
-	 * @param bean the new bean instance we may need to initialize
-	 * @param mbd the merged bean definition that the bean was created with
-	 * (can also be {@code null}, if given an existing bean instance)
-	 * @throws Throwable if thrown by init methods or by the invocation process
-	 * @see #invokeCustomInitMethod
+	 * 执行初始化方法
+	 *  1 对实现InitializingBean接口特殊的bean，回调afterPropertiesSet()
+	 *  2 调用自定义初始化方法 mbd.getInitMethodName()
 	 */
 	protected void invokeInitMethods(String beanName, final Object bean, @Nullable RootBeanDefinition mbd)
 			throws Throwable {
 
+		/** 对实现InitializingBean接口特殊的bean，回调afterPropertiesSet() **/
 		boolean isInitializingBean = (bean instanceof InitializingBean);
 		if (isInitializingBean && (mbd == null || !mbd.isExternallyManagedInitMethod("afterPropertiesSet"))) {
 			if (logger.isTraceEnabled()) {
@@ -1915,6 +1893,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			}
 		}
 
+		/** 2 调用自定义初始化方法 mbd.getInitMethodName()  **/
 		if (mbd != null && bean.getClass() != NullBean.class) {
 			String initMethodName = mbd.getInitMethodName();
 			if (StringUtils.hasLength(initMethodName) &&
@@ -1926,39 +1905,42 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Invoke the specified custom init method on the given bean.
-	 * Called by invokeInitMethods.
-	 * <p>Can be overridden in subclasses for custom resolution of init
-	 * methods with arguments.
-	 * @see #invokeInitMethods
+	 * 调用自定义初始化方法
 	 */
 	protected void invokeCustomInitMethod(String beanName, final Object bean, RootBeanDefinition mbd)
 			throws Throwable {
 
+		/** 获取自定义初始化方法名称 **/
 		String initMethodName = mbd.getInitMethodName();
 		Assert.state(initMethodName != null, "No init method set");
+
+		/** 获取初始化方法 **/
 		Method initMethod = (mbd.isNonPublicAccessAllowed() ?
 				BeanUtils.findMethod(bean.getClass(), initMethodName) :
 				ClassUtils.getMethodIfAvailable(bean.getClass(), initMethodName));
 
+		/** 初始方法为null **/
 		if (initMethod == null) {
+			/** 指示配置的init方法是否为默认方法。而此方法不存在抛出异常 **/
 			if (mbd.isEnforceInitMethod()) {
 				throw new BeanDefinitionValidationException("Could not find an init method named '" +
 						initMethodName + "' on bean with name '" + beanName + "'");
 			}
+            /** 返回 **/
 			else {
 				if (logger.isTraceEnabled()) {
 					logger.trace("No default init method named '" + initMethodName +
 							"' found on bean with name '" + beanName + "'");
 				}
-				// Ignore non-existent default lifecycle methods.
 				return;
 			}
 		}
-
+        /** 打印日志 **/
 		if (logger.isTraceEnabled()) {
 			logger.trace("Invoking init method  '" + initMethodName + "' on bean with name '" + beanName + "'");
 		}
+
+		/** 调用自定义初始化方法 **/
 		Method methodToInvoke = ClassUtils.getInterfaceMethodIfPossible(initMethod);
 
 		if (System.getSecurityManager() != null) {

@@ -978,7 +978,7 @@ public abstract class AbstractBeanDefinition extends BeanMetadataAttributeAccess
 	}
 
 	/**
-	 * Indicate whether the configured init method is the default.
+	 * 指示配置的init方法是否为默认方法。
 	 * @see #getInitMethodName()
 	 */
 	public boolean isEnforceInitMethod() {
