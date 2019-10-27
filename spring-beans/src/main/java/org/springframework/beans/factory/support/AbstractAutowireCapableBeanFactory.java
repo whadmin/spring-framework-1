@@ -481,10 +481,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 		}
 		RootBeanDefinition mbdToUse = mbd;
 
-		/** 解析获取 BeanDefinition 中bean实例对象 Class对象,并返回 **/
+		/** 1 解析Bean Class **/
 		Class<?> resolvedClass = resolveBeanClass(mbd, beanName);
 
-		/** 如果解析的 class 不为空，则会将该 BeanDefinition 进行设置到新建 mbdToUse 中，同时设置BeanClass  **/
+		/** 2 将BeanDefinition 封装成RootBeanDefinition，设置BeanClass **/
 		if (resolvedClass != null && !mbd.hasBeanClass() && mbd.getBeanClassName() != null) {
 			mbdToUse = new RootBeanDefinition(mbd);
 			mbdToUse.setBeanClass(resolvedClass);
@@ -498,10 +498,11 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			throw new BeanDefinitionStoreException(mbdToUse.getResourceDescription(),
 					beanName, "Validation of method overrides failed", ex);
 		}
-
+        /**
+		 * BeanPostProcessor 扩展点
+		 * 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation
+		 */
 		try {
-			// BeanPostProcessor 扩展点1
-			// 调用InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation
 			Object bean = resolveBeforeInstantiation(beanName, mbdToUse);
 			if (bean != null) {
 				return bean;
@@ -512,6 +513,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 					"BeanPostProcessor before instantiation of bean failed", ex);
 		}
 
+		/** 创建 Bean 对象 **/
 		try {
 			Object beanInstance = doCreateBean(beanName, mbdToUse, args);
 			if (logger.isTraceEnabled()) {
@@ -520,8 +522,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 			return beanInstance;
 		}
 		catch (BeanCreationException | ImplicitlyAppearedSingletonException ex) {
-			// A previously detected exception with proper bean creation context already,
-			// or illegal singleton state to be communicated up to DefaultSingletonBeanRegistry.
 			throw ex;
 		}
 		catch (Throwable ex) {
@@ -691,20 +691,20 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Determine the target type for the given bean definition.
-	 * @param beanName the name of the bean (for error handling purposes)
-	 * @param mbd the merged bean definition for the bean
-	 * @param typesToMatch the types to match in case of internal type matching purposes
-	 * (also signals that the returned {@code Class} will never be exposed to application code)
-	 * @return the type for the bean if determinable, or {@code null} otherwise
+	 * 确定Bean目标类型
 	 */
 	@Nullable
 	protected Class<?> determineTargetType(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
+		/** 直接从BeanDefinition获取Bean目标类型 优先从resolvedTargetType获取，不存在则获取targetType **/
 		Class<?> targetType = mbd.getTargetType();
 		if (targetType == null) {
+			/** 获取resolvedTargetType **/
 			targetType = (mbd.getFactoryMethodName() != null ?
+					/** 通过工厂方法获取Bean目标类型 **/
 					getTypeForFactoryMethod(beanName, mbd, typesToMatch) :
+					/** 解析Bean Class **/
 					resolveBeanClass(mbd, beanName, typesToMatch));
+			/** 设置resolvedTargetType **/
 			if (ObjectUtils.isEmpty(typesToMatch) || getTempClassLoader() == null) {
 				mbd.resolvedTargetType = targetType;
 			}
@@ -1115,18 +1115,15 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	}
 
 	/**
-	 * Apply before-instantiation post-processors, resolving whether there is a
-	 * before-instantiation shortcut for the specified bean.
-	 * @param beanName the name of the bean
-	 * @param mbd the bean definition for the bean
-	 * @return the shortcut-determined bean instance, or {@code null} if none
+	 * BeanPostProcessor 扩展点
+	 * 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation
 	 */
 	@Nullable
 	protected Object resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd) {
 		Object bean = null;
 		if (!Boolean.FALSE.equals(mbd.beforeInstantiationResolved)) {
-			// Make sure bean class is actually resolved at this point.
 			if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+				/** 获取Bean目标类型 **/
 				Class<?> targetType = determineTargetType(beanName, mbd);
 				if (targetType != null) {
 					bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);

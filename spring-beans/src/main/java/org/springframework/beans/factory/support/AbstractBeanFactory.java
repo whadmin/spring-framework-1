@@ -137,10 +137,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@Nullable
 	private ConversionService conversionService;
 
-	/** Custom PropertyEditorRegistrars to apply to the beans of this factory. */
+	/** 定制PropertyEditorRegistrars */
 	private final Set<PropertyEditorRegistrar> propertyEditorRegistrars = new LinkedHashSet<>(4);
 
-	/** Custom PropertyEditors to apply to the beans of this factory. */
+	/** 定制 PropertyEditors  */
 	private final Map<Class<?>, Class<? extends PropertyEditor>> customEditors = new HashMap<>(4);
 
 	/** 自定义TypeConverter，将覆盖默认的PropertyEditor机制 */
@@ -1578,6 +1578,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 		boolean freshResolve = false;
 
+		/** 如果typesToMatch不为Null,且tempClassLoader类型为自定义类加载器，将typesToMatch放入tempClassLoader类加载器，排除加载的类名单中 **/
 		if (!ObjectUtils.isEmpty(typesToMatch)) {
 			ClassLoader tempClassLoader = getTempClassLoader();
 			if (tempClassLoader != null) {
@@ -1592,11 +1593,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 
+		/** 获取BeanClassName **/
 		String className = mbd.getBeanClassName();
 		if (className != null) {
+			/** 使用beanExpressionResolver解析ClassName **/
 			Object evaluated = evaluateBeanDefinitionString(className, mbd);
+			/**  **/
 			if (!className.equals(evaluated)) {
-				// A dynamically resolved expression, supported as of 4.2...
 				if (evaluated instanceof Class) {
 					return (Class<?>) evaluated;
 				}
@@ -1608,9 +1611,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					throw new IllegalStateException("Invalid class name expression result: " + evaluated);
 				}
 			}
+			/** 使用dynamicLoader，默认使用beanClassLoader加载  如果设置typesToMatch使用TempClassLoader加载 **/
 			if (freshResolve) {
-				// When resolving against a temporary class loader, exit early in order
-				// to avoid storing the resolved Class in the bean definition.
 				if (dynamicLoader != null) {
 					try {
 						return dynamicLoader.loadClass(className);
@@ -1624,17 +1626,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				return ClassUtils.forName(className, dynamicLoader);
 			}
 		}
-
+        /** 使用BeanClassLoader加载beanClass 返回Class对象 **/
 		return mbd.resolveBeanClass(beanClassLoader);
 	}
 
 	/**
-	 * Evaluate the given String as contained in a bean definition,
-	 * potentially resolving it as an expression.
-	 * @param value the value to check
-	 * @param beanDefinition the bean definition that the value comes from
-	 * @return the resolved value
-	 * @see #setBeanExpressionResolver
+	 * 使用beanExpressionResolver解析ClassName（???）
 	 */
 	@Nullable
 	protected Object evaluateBeanDefinitionString(@Nullable String value, @Nullable BeanDefinition beanDefinition) {
@@ -1654,36 +1651,25 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 
 	/**
-	 * Predict the eventual bean type (of the processed bean instance) for the
-	 * specified bean. Called by {@link #getType} and {@link #isTypeMatch}.
-	 * Does not need to handle FactoryBeans specifically, since it is only
-	 * supposed to operate on the raw bean type.
-	 * <p>This implementation is simplistic in that it is not able to
-	 * handle factory methods and InstantiationAwareBeanPostProcessors.
-	 * It only predicts the bean type correctly for a standard bean.
-	 * To be overridden in subclasses, applying more sophisticated type detection.
-	 * @param beanName the name of the bean
-	 * @param mbd the merged bean definition to determine the type for
-	 * @param typesToMatch the types to match in case of internal type matching purposes
-	 * (also signals that the returned {@code Class} will never be exposed to application code)
-	 * @return the type of the bean, or {@code null} if not predictable
+	 * 预测Bean的类型
 	 */
 	@Nullable
 	protected Class<?> predictBeanType(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
+		/** 从getTargetType()获取Bean的类型 **/
 		Class<?> targetType = mbd.getTargetType();
 		if (targetType != null) {
 			return targetType;
 		}
+        /** 如果是通过静态工厂或实例工厂方法构造Bean返回null **/
 		if (mbd.getFactoryMethodName() != null) {
 			return null;
 		}
+		/** 解析Bean Class **/
 		return resolveBeanClass(mbd, beanName, typesToMatch);
 	}
 
 	/**
-	 * Check whether the given bean is defined as a {@link FactoryBean}.
-	 * @param beanName the name of the bean
-	 * @param mbd the corresponding bean definition
+	 * 检查给定的bean是否已定义为{@link FactoryBean}。
 	 */
 	protected boolean isFactoryBean(String beanName, RootBeanDefinition mbd) {
 		Boolean result = mbd.isFactoryBean;
@@ -1807,8 +1793,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * Perform appropriate cleanup of cached metadata after bean creation failed.
-	 * @param beanName the name of the bean
+	 * 指定名称bean创建失败后，从已创建 Bean 的名字集合中删除
 	 */
 	protected void cleanupAfterBeanCreationFailure(String beanName) {
 		synchronized (this.mergedBeanDefinitions) {
@@ -1819,10 +1804,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 
 	/**
-	 * Remove the singleton instance (if any) for the given bean name,
-	 * but only if it hasn't been used for other purposes than type checking.
-	 * @param beanName the name of the bean
-	 * @return {@code true} if actually removed, {@code false} otherwise
+	 * 删除给定bean名称的单例实例,但前提是不存在于已创建 Bean 的名字集合中。
 	 */
 	protected boolean removeSingletonIfCreatedForTypeCheckOnly(String beanName) {
 		if (!this.alreadyCreated.contains(beanName)) {

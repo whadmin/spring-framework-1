@@ -322,9 +322,7 @@ public class RootBeanDefinition extends AbstractBeanDefinition {
 	}
 
 	/**
-	 * Return the target type of this bean definition, if known
-	 * (either specified in advance or resolved on first instantiation).
-	 * @since 3.2.2
+	 * 返回此bean定义的目标类型（如果已知），优先从resolvedTargetType获取，不存在则获取targetType
 	 */
 	@Nullable
 	public Class<?> getTargetType() {
