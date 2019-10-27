@@ -46,35 +46,38 @@ import org.springframework.util.StringUtils;
  */
 public class ShadowingClassLoader extends DecoratingClassLoader {
 
-	/** Packages that are excluded by default. */
+	/** 默认情况下排除的软件包。 */
 	public static final String[] DEFAULT_EXCLUDED_PACKAGES =
 			new String[] {"java.", "javax.", "jdk.", "sun.", "oracle.", "com.sun.", "com.ibm.", "COM.ibm.",
 					"org.w3c.", "org.xml.", "org.dom4j.", "org.eclipse", "org.aspectj.", "net.sf.cglib",
 					"org.springframework.cglib", "org.apache.xerces.", "org.apache.commons.logging."};
 
 
+	/**
+	 * 代理ClassLoader
+	 */
 	private final ClassLoader enclosingClassLoader;
 
+	/**
+	 * 字节码转换工具
+	 */
 	private final List<ClassFileTransformer> classFileTransformers = new LinkedList<>();
 
+	/**
+	 * 字节码转换工具
+	 */
 	private final Map<String, Class<?>> classCache = new HashMap<>();
 
 
 	/**
-	 * Create a new ShadowingClassLoader, decorating the given ClassLoader,
-	 * applying {@link #DEFAULT_EXCLUDED_PACKAGES}.
-	 * @param enclosingClassLoader the ClassLoader to decorate
-	 * @see #ShadowingClassLoader(ClassLoader, boolean)
+	 * 创建一个新的ShadowingClassLoader，使用{@link #DEFAULT_EXCLUDED_PACKAGES}装饰给定的ClassLoader。
 	 */
 	public ShadowingClassLoader(ClassLoader enclosingClassLoader) {
 		this(enclosingClassLoader, true);
 	}
 
 	/**
-	 * Create a new ShadowingClassLoader, decorating the given ClassLoader.
-	 * @param enclosingClassLoader the ClassLoader to decorate
-	 * @param defaultExcludes whether to apply {@link #DEFAULT_EXCLUDED_PACKAGES}
-	 * @since 4.3.8
+	 * 创建一个新的ShadowingClassLoader，使用{@link #DEFAULT_EXCLUDED_PACKAGES}装饰给定的ClassLoader。
 	 */
 	public ShadowingClassLoader(ClassLoader enclosingClassLoader, boolean defaultExcludes) {
 		Assert.notNull(enclosingClassLoader, "Enclosing ClassLoader must not be null");
@@ -88,9 +91,7 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 
 
 	/**
-	 * Add the given ClassFileTransformer to the list of transformers that this
-	 * ClassLoader will apply.
-	 * @param transformer the ClassFileTransformer
+	 * 将给定的ClassFileTransformer添加到此ClassLoader将应用的转换器列表中。
 	 */
 	public void addTransformer(ClassFileTransformer transformer) {
 		Assert.notNull(transformer, "Transformer must not be null");
@@ -98,9 +99,7 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 	}
 
 	/**
-	 * Copy all ClassFileTransformers from the given ClassLoader to the list of
-	 * transformers that this ClassLoader will apply.
-	 * @param other the ClassLoader to copy from
+	 * 将所有ClassFileTransformers从给定的ClassLoader复制到该ClassLoader将应用的转换器列表。
 	 */
 	public void copyTransformers(ShadowingClassLoader other) {
 		Assert.notNull(other, "Other ClassLoader must not be null");
@@ -123,9 +122,7 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 	}
 
 	/**
-	 * Determine whether the given class should be excluded from shadowing.
-	 * @param className the name of the class
-	 * @return whether the specified class should be shadowed
+	 * 确定是否应将给定的类从阴影中排除。
 	 */
 	private boolean shouldShadow(String className) {
 		return (!className.equals(getClass().getName()) && !className.endsWith("ShadowingClassLoader") &&
@@ -133,11 +130,7 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 	}
 
 	/**
-	 * Determine whether the specified class is eligible for shadowing
-	 * by this class loader.
-	 * @param className the class name to check
-	 * @return whether the specified class is eligible
-	 * @see #isExcluded
+	 * 确定指定类不在自定义类加载器排除加载的范围内
 	 */
 	protected boolean isEligibleForShadowing(String className) {
 		return !isExcluded(className);
@@ -170,6 +163,9 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 		}
 	}
 
+	/**
+	 * 执行字节码转换
+	 */
 	private byte[] applyTransformers(String name, byte[] bytes) {
 		String internalName = StringUtils.replace(name, ".", "/");
 		try {
@@ -185,17 +181,26 @@ public class ShadowingClassLoader extends DecoratingClassLoader {
 	}
 
 
+	/**
+	 * 重写加载资源，使用enclosingClassLoader加载
+	 */
 	@Override
 	public URL getResource(String name) {
 		return this.enclosingClassLoader.getResource(name);
 	}
 
+	/**
+	 * 重写打开指定类的inputstream，使用enclosingClassLoader打开
+	 */
 	@Override
 	@Nullable
 	public InputStream getResourceAsStream(String name) {
 		return this.enclosingClassLoader.getResourceAsStream(name);
 	}
 
+	/**
+	 * 重写加载资源，使用enclosingClassLoader加载
+	 */
 	@Override
 	public Enumeration<URL> getResources(String name) throws IOException {
 		return this.enclosingClassLoader.getResources(name);

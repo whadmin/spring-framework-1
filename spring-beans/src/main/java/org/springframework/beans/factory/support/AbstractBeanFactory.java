@@ -294,7 +294,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				if (dependsOn != null) {
 					for (String dep : dependsOn) {
 
-						/** 校验该依赖是否已经注册给当前 Bean **/
+						/** 校验该依赖关系 **/
 						if (isDependent(beanName, dep)) {
 							throw new BeanCreationException(mbd.getResourceDescription(), beanName,
 									"Circular depends-on relationship between '" + beanName + "' and '" + dep + "'");
@@ -313,16 +313,16 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					}
 				}
 
-				/** 2.2.6.1   如果是单例bean **/
+				/** 2.2.6.1 如果是单例bean **/
 				if (mbd.isSingleton()) {
-					/** 从单例bean对象缓存中获取bean对象，如果不存在调用createBean创建 **/
+					/** 使用singletonFactory 获取早期bean实例 **/
 					sharedInstance = getSingleton(beanName, () -> {
 						try {
-							/** 加载创建bean **/
+							/** 创建bean **/
 							return createBean(beanName, mbd, args);
 						}
 						catch (BeansException ex) {
-							/** 从单例bean对象缓存中删除指定beanName **/
+							/** 销毁beanName 单例bean实例. **/
 							destroySingleton(beanName);
 							throw ex;
 						}
@@ -331,7 +331,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					bean = getObjectForBeanInstance(sharedInstance, name, beanName, mbd);
 				}
 
-				/** 判断是原型模式 **/
+				/** 2.2.6.2 如果是原型bean **/
 				 else if (mbd.isPrototype()) {
 					Object prototypeInstance = null;
 					try {
@@ -341,7 +341,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 						 */
 						beforePrototypeCreation(beanName);
 
-						/** 加载创建bean **/
+						/** 创建bean **/
 						prototypeInstance = createBean(beanName, mbd, args);
 					}
 					finally {
@@ -354,23 +354,35 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					/** 2 从bean实例获取构造对象（处理FactoryBean逻辑） **/
 					bean = getObjectForBeanInstance(prototypeInstance, name, beanName, mbd);
 				}
-
+                /** 2.2.6.3 如果是扩展作用域  request/session**/
 				else {
+					/** 获取bean作用域  单例/原型 **/
 					String scopeName = mbd.getScope();
 					final Scope scope = this.scopes.get(scopeName);
+					/** 没有设置作用域 抛出异常 **/
 					if (scope == null) {
 						throw new IllegalStateException("No Scope registered for scope name '" + scopeName + "'");
 					}
 					try {
 						Object scopedInstance = scope.get(beanName, () -> {
+							/**
+							 * 模板方法，原型bean创建前置动作，子类可以覆盖
+							 * 默认实现：将beanName添加prototypesCurrentlyInCreation(当前正在创建的原型bean的名称)
+							 */
 							beforePrototypeCreation(beanName);
 							try {
+								/** 创建bean **/
 								return createBean(beanName, mbd, args);
 							}
 							finally {
+								/**
+								 * 模板方法，原型bean创建后置动作，子类可以覆盖
+								 * 默认实现：将beanName从prototypesCurrentlyInCreation删除(当前正在创建的原型bean的名称)
+								 */
 								afterPrototypeCreation(beanName);
 							}
 						});
+						/** 2 从bean实例获取构造对象（处理FactoryBean逻辑） **/
 						bean = getObjectForBeanInstance(scopedInstance, name, beanName, mbd);
 					}
 					catch (IllegalStateException ex) {
@@ -1524,21 +1536,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * Resolve the bean class for the specified bean definition,
-	 * resolving a bean class name into a Class reference (if necessary)
-	 * and storing the resolved Class in the bean definition for further use.
-	 * @param mbd the merged bean definition to determine the class for
-	 * @param beanName the name of the bean (for error handling purposes)
-	 * @param typesToMatch the types to match in case of internal type matching purposes
-	 * (also signals that the returned {@code Class} will never be exposed to application code)
-	 * @return the resolved bean class (or {@code null} if none)
-	 * @throws CannotLoadBeanClassException if we failed to load the class
+	 * 解析Bean Class
 	 */
 	@Nullable
 	protected Class<?> resolveBeanClass(final RootBeanDefinition mbd, String beanName, final Class<?>... typesToMatch)
 			throws CannotLoadBeanClassException {
 
 		try {
+			/** 设置Bean Class 直接返回 **/
 			if (mbd.hasBeanClass()) {
 				return mbd.getBeanClass();
 			}
@@ -1566,13 +1571,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	private Class<?> doResolveBeanClass(RootBeanDefinition mbd, Class<?>... typesToMatch)
 			throws ClassNotFoundException {
 
+		/** 获取ClassLoader  **/
 		ClassLoader beanClassLoader = getBeanClassLoader();
+
 		ClassLoader dynamicLoader = beanClassLoader;
+
 		boolean freshResolve = false;
 
 		if (!ObjectUtils.isEmpty(typesToMatch)) {
-			// When just doing type checks (i.e. not creating an actual instance yet),
-			// use the specified temporary class loader (e.g. in a weaving scenario).
 			ClassLoader tempClassLoader = getTempClassLoader();
 			if (tempClassLoader != null) {
 				dynamicLoader = tempClassLoader;
@@ -1619,7 +1625,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 
-		// Resolve regularly, caching the result in the BeanDefinition...
 		return mbd.resolveBeanClass(beanClassLoader);
 	}
 

@@ -24,12 +24,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * Base class for decorating ClassLoaders such as {@link OverridingClassLoader}
- * and {@link org.springframework.instrument.classloading.ShadowingClassLoader},
- * providing common handling of excluded packages and classes.
+ * 作为Spring自定义类加载器的基类，Spring自定义类加载器包括
+ * {@link overridingclassloader}
+ * {@link shadowingclassloader}，
  *
- * @author Juergen Hoeller
- * @author Rod Johnson
+ * 提供排除包和类的通用处理。
  * @since 2.5.2
  */
 public abstract class DecoratingClassLoader extends ClassLoader {
@@ -45,14 +44,13 @@ public abstract class DecoratingClassLoader extends ClassLoader {
 
 
 	/**
-	 * Create a new DecoratingClassLoader with no parent ClassLoader.
+	 * 创建一个新的DecoratingClassLoader
 	 */
 	public DecoratingClassLoader() {
 	}
 
 	/**
-	 * Create a new DecoratingClassLoader using the given parent ClassLoader
-	 * for delegation.
+	 * 创建一个新的DecoratingClassLoader,同时指定父ClassLoader
 	 */
 	public DecoratingClassLoader(@Nullable ClassLoader parent) {
 		super(parent);
@@ -60,10 +58,8 @@ public abstract class DecoratingClassLoader extends ClassLoader {
 
 
 	/**
-	 * Add a package name to exclude from decoration (e.g. overriding).
-	 * <p>Any class whose fully-qualified name starts with the name registered
-	 * here will be handled by the parent ClassLoader in the usual fashion.
-	 * @param packageName the package name to exclude
+	 * 添加自定义类加载排除加载的类包路径
+	 * <p>此处注册的任何类名称都将由父ClassLoader处理
 	 */
 	public void excludePackage(String packageName) {
 		Assert.notNull(packageName, "Package name must not be null");
@@ -71,10 +67,8 @@ public abstract class DecoratingClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * Add a class name to exclude from decoration (e.g. overriding).
-	 * <p>Any class name registered here will be handled by the parent
-	 * ClassLoader in the usual fashion.
-	 * @param className the class name to exclude
+	 * 添加自定义类加载排除加载的类名称
+	 * <p>此处注册的任何类名称都将由父ClassLoader处理
 	 */
 	public void excludeClass(String className) {
 		Assert.notNull(className, "Class name must not be null");
@@ -82,13 +76,7 @@ public abstract class DecoratingClassLoader extends ClassLoader {
 	}
 
 	/**
-	 * Determine whether the specified class is excluded from decoration
-	 * by this class loader.
-	 * <p>The default implementation checks against excluded packages and classes.
-	 * @param className the class name to check
-	 * @return whether the specified class is eligible
-	 * @see #excludePackage
-	 * @see #excludeClass
+	 * 确定指定类被在自定义类加载器排除加载的范围内
 	 */
 	protected boolean isExcluded(String className) {
 		if (this.excludedClasses.contains(className)) {

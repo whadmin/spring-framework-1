@@ -466,7 +466,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	//---------------------------------------------------------------------
 
 	/**
-	 * 根据给定的 BeanDefinition 和 args 实例化一个 Bean 对象
+	 * 创建 Bean 对象
 	 * beanName ：bean 的名字。
 	 * mbd ：已经合并了父类属性的（如果有的话）BeanDefinition 对象。
 	 * args ：用于构造函数或者工厂方法创建 Bean 实例对象的参数。
@@ -475,6 +475,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 	protected Object createBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
 			throws BeanCreationException {
 
+		/** 打印日志 **/
 		if (logger.isTraceEnabled()) {
 			logger.trace("Creating instance of bean '" + beanName + "'");
 		}
