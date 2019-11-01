@@ -327,7 +327,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	}
 
 	/**
-	 * 单例bean实例缓存是否存在指定beanName的Bean实例
+	 * 指定bean名称是否存在于单例bean实例缓存
 	 */
 	@Override
 	public boolean containsSingleton(String beanName) {

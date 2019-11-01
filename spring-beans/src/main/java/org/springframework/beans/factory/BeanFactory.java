@@ -46,51 +46,47 @@ public interface BeanFactory {
 	<T> T getBean(String name, Class<T> requiredType) throws BeansException;
 
 	/**
-	 * 根据bean的名字，获取在IOC容器中得到bean实例，
-	 * 通过第二个参数Object[] args可以给bean的属性赋值，赋值的方式有两种：构造方法和工厂方法
-	 * 通过这种方式获取的bean必须把scope属性设置为prototype，也就是非单例模式。
+	 * 根据bean的名字和参数，获取在IOC容器中得到bean实例，这里参数用于实例化Bean，实例化Bean方式通常对应有参构造方法和有参工厂方法
 	 */
 	Object getBean(String name, Object... args) throws BeansException;
 
 	/**
-	 * 根据bean的名字和Class类型，获取在IOC容器中得到bean实例
-	 * 通过第二个参数Object[] args可以给bean的属性赋值，赋值的方式有两种：构造方法和工厂方法
-	 * 通过这种方式获取的bean必须把scope属性设置为prototype，也就是非单例模式。
+	 * 根据bean的类型和参数，获取在IOC容器中得到bean实例，这里参数用于实例化Bean，实例化Bean方式通常对应有参构造方法和有参工厂方法
 	 */
 	<T> T getBean(Class<T> requiredType, Object... args) throws BeansException;
 
 	/**
-	 * 根据bean的Class类型返回指定bean构造程序
+	 * 根据bean的Class类型返回bean实例构造对象
 	 */
 	<T> ObjectProvider<T> getBeanProvider(Class<T> requiredType);
 
 	/**
-	 * 根据bean的ResolvableType类型返回指定bean构造程序
+	 * 根据bean的ResolvableType类型返回bean实例构造对象
 	 */
 	<T> ObjectProvider<T> getBeanProvider(ResolvableType requiredType);
 
 	/**
-	 * 提供对bean的检索，看看是否在IOC容器有这个名字的bean
+	 * 判断指定名称bean，是否注册到IOC容器
 	 */
 	boolean containsBean(String name);
 
 	/**
-	 * 是否为单实例bean
+	 * bean 是否被定义成单实例
 	 */
 	boolean isSingleton(String name) throws NoSuchBeanDefinitionException;
 
 	/**
-	 * 是否为原型bean(每次getBean都创建独立的bean实例)
+	 * bean 是否被定义成原型实例
 	 */
 	boolean isPrototype(String name) throws NoSuchBeanDefinitionException;
 
 	/**
-	 * 根据bean的名字，获取在IOC容器中得到bean实例并判断是否和指定参数类型ResolvableType是否匹配
+	 * 判断指定名称bean，是否和ResolvableType类型匹配
 	 */
 	boolean isTypeMatch(String name, ResolvableType typeToMatch) throws NoSuchBeanDefinitionException;
 
 	/**
-	 * 根据bean的名字，获取在IOC容器中得到bean实例并判断是否和指定参数类型Class是否匹配
+	 * 判断指定名称bean，是否和Class类型匹配
 	 */
 	boolean isTypeMatch(String name, Class<?> typeToMatch) throws NoSuchBeanDefinitionException;
 
@@ -102,13 +98,12 @@ public interface BeanFactory {
 
 	/**
 	 * 根据bean的名字，获取在IOC容器中得到bean实例Class类型
-	 * allowFactoryBeanInit：FactoryBean可以仅出于确定其对象类型的目的而对其进行初始化
 	 */
 	@Nullable
 	Class<?> getType(String name, boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException;
 
 	/**
-	 * 根据bean的名字，获取实例的别名数组
+	 * 根据bean的名字，获取别名
 	 */
 	String[] getAliases(String name);
 

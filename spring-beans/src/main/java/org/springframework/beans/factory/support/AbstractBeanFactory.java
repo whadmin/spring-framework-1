@@ -498,19 +498,30 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return object;
 	}
 
+	/**
+	 * 判断指定名称bean，是否注册到IOC容器
+	 */
 	@Override
 	public boolean containsBean(String name) {
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
+
+		/** 1 判断指定名称bean是否存在于单例bean实例缓存中或已在IOC容器注册BeanDefinition**/
 		if (containsSingleton(beanName) || containsBeanDefinition(beanName)) {
+			/**  bean名称不以“&”作为前缀或以“&”作为前缀类型为FactoryBean返回true **/
 			return (!BeanFactoryUtils.isFactoryDereference(name) || isFactoryBean(name));
 		}
-		// Not found -> check parent.
+		/** 2 如果不存在，尝试交给从父BeanFactory判断 **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		return (parentBeanFactory != null && parentBeanFactory.containsBean(originalBeanName(name)));
 	}
 
+	/**
+	 * bean 是否被定义成单实例
+	 */
 	@Override
 	public boolean isSingleton(String name) throws NoSuchBeanDefinitionException {
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
 		Object beanInstance = getSingleton(beanName, false);
@@ -591,6 +602,11 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	@Override
 	public boolean isTypeMatch(String name, ResolvableType typeToMatch) throws NoSuchBeanDefinitionException {
 		return isTypeMatch(name, typeToMatch, true);
+	}
+
+	@Override
+	public boolean isTypeMatch(String name, Class<?> typeToMatch) throws NoSuchBeanDefinitionException {
+		return isTypeMatch(name, ResolvableType.forRawClass(typeToMatch));
 	}
 
 	/**
@@ -748,10 +764,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return typeToMatch.isAssignableFrom(predictedType);
 	}
 
-	@Override
-	public boolean isTypeMatch(String name, Class<?> typeToMatch) throws NoSuchBeanDefinitionException {
-		return isTypeMatch(name, ResolvableType.forRawClass(typeToMatch));
-	}
+
 
 	@Override
 	@Nullable
@@ -933,6 +946,9 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return this.conversionService;
 	}
 
+	/**
+	 * 注册PropertyEditorRegistrar
+	 */
 	@Override
 	public void addPropertyEditorRegistrar(PropertyEditorRegistrar registrar) {
 		Assert.notNull(registrar, "PropertyEditorRegistrar must not be null");
@@ -940,12 +956,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * Return the set of PropertyEditorRegistrars.
+	 * 返回已注册PropertyEditorRegistrar
 	 */
 	public Set<PropertyEditorRegistrar> getPropertyEditorRegistrars() {
 		return this.propertyEditorRegistrars;
 	}
 
+	/**
+	 * 注册指定类型 propertyEditorClass（属性编辑器）
+	 */
 	@Override
 	public void registerCustomEditor(Class<?> requiredType, Class<? extends PropertyEditor> propertyEditorClass) {
 		Assert.notNull(requiredType, "Required type must not be null");
@@ -965,28 +984,35 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return this.customEditors;
 	}
 
+	/**
+	 * 设置 自定义TypeConverter
+	 */
 	@Override
 	public void setTypeConverter(TypeConverter typeConverter) {
 		this.typeConverter = typeConverter;
 	}
 
 	/**
-	 * Return the custom TypeConverter to use, if any.
-	 * @return the custom TypeConverter, or {@code null} if none specified
+	 * 返回 自定义TypeConverter
 	 */
 	@Nullable
 	protected TypeConverter getCustomTypeConverter() {
 		return this.typeConverter;
 	}
 
+	/**
+	 * 返回 TypeConverter，如果没有自定义TypeConverter，
+	 * 则创建一个默认SimpleTypeConverter，初始化并返回
+	 */
 	@Override
 	public TypeConverter getTypeConverter() {
+		/** 1 获取自定义TypeConverter，如果存在返回 **/
 		TypeConverter customConverter = getCustomTypeConverter();
 		if (customConverter != null) {
 			return customConverter;
 		}
+		/** 2 如果没有自定义TypeConverter，则创建一个默认SimpleTypeConverter，初始化并返回 **/
 		else {
-			// Build default TypeConverter, registering custom editors.
 			SimpleTypeConverter typeConverter = new SimpleTypeConverter();
 			typeConverter.setConversionService(getConversionService());
 			registerCustomEditors(typeConverter);
@@ -1169,23 +1195,25 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * 获取指定name,bean实例类型为FactoryBean
+	 * 确定指定名称bean类型为FactoryBean
 	 */
 	@Override
 	public boolean isFactoryBean(String name) throws NoSuchBeanDefinitionException {
-		/** 从当前BeanFactory，单例bean对象缓存中获取bean实例，并判断类型是否为FactoryBean **/
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
-		Object beanInstance = getSingleton(beanName, false);
 
+		/** 1 单例bean对象缓存中获取bean实例，并判断类型是否为FactoryBean  **/
+		Object beanInstance = getSingleton(beanName, false);
 		if (beanInstance != null) {
 			return (beanInstance instanceof FactoryBean);
 		}
-		/** 从父BeanFactory，单例bean对象缓存中获取bean实例，并判断类型是否为FactoryBean **/
+
+		/** 2 获取父BeanFactory,迭代调用isFactoryBean,确定指定名称bean类型为FactoryBean **/
 		if (!containsBeanDefinition(beanName) && getParentBeanFactory() instanceof ConfigurableBeanFactory) {
 			// No bean definition found in this factory -> delegate to parent.
 			return ((ConfigurableBeanFactory) getParentBeanFactory()).isFactoryBean(name);
 		}
-		/** 通过判断当前beanName 对应合并后BeanDefinition 判断类型是否为FactoryBean  **/
+		/** 3 通过检查BeanDefinition，确定指定名称bean类型为FactoryBean  **/
 		return isFactoryBean(beanName, getMergedLocalBeanDefinition(beanName));
 	}
 
@@ -1309,15 +1337,12 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * Initialize the given BeanWrapper with the custom editors registered
-	 * with this factory. To be called for BeanWrappers that will create
-	 * and populate bean instances.
-	 * <p>The default implementation delegates to {@link #registerCustomEditors}.
-	 * Can be overridden in subclasses.
-	 * @param bw the BeanWrapper to initialize
+	 * 初始化BeanWrapper
 	 */
 	protected void initBeanWrapper(BeanWrapper bw) {
+		/** 设置ConversionService **/
 		bw.setConversionService(getConversionService());
+		/** 注册CustomEditors **/
 		registerCustomEditors(bw);
 	}
 
@@ -1392,7 +1417,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * 获取指定beanName  BeanDefinition（合并后的）
+	 * 获取指定beanName 对应 BeanDefinition（合并后的）
 	 */
 	protected RootBeanDefinition getMergedBeanDefinition(
 			String beanName, BeanDefinition bd, @Nullable BeanDefinition containingBd)
@@ -1578,7 +1603,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 		boolean freshResolve = false;
 
-		/** 如果typesToMatch不为Null,且tempClassLoader类型为自定义类加载器，将typesToMatch放入tempClassLoader类加载器，排除加载的类名单中 **/
+		/** 如果typesToMatch不为Null且tempClassLoader类型为自定义类加载器，添加typesToMatch放入tempClassLoader类加载器，排除加载的类名单中 **/
 		if (!ObjectUtils.isEmpty(typesToMatch)) {
 			ClassLoader tempClassLoader = getTempClassLoader();
 			if (tempClassLoader != null) {
@@ -1611,7 +1636,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 					throw new IllegalStateException("Invalid class name expression result: " + evaluated);
 				}
 			}
-			/** 使用dynamicLoader，默认使用beanClassLoader加载  如果设置typesToMatch使用TempClassLoader加载 **/
+			/** 使用dynamicLoader，dynamicLoader默认情况下指向beanClassLoader加载，如果设置typesToMatch dynamicLoader指向TempClassLoader **/
 			if (freshResolve) {
 				if (dynamicLoader != null) {
 					try {
@@ -1651,7 +1676,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 
 	/**
-	 * 预测Bean的类型
+	 * 预测Bean的Class类型
 	 */
 	@Nullable
 	protected Class<?> predictBeanType(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
@@ -1669,15 +1694,19 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * 检查给定的bean是否已定义为{@link FactoryBean}。
+	 * 通过检查BeanDefinition，确定指定名称bean类型为FactoryBean
 	 */
 	protected boolean isFactoryBean(String beanName, RootBeanDefinition mbd) {
+		/** 从BeanDefinition定义中获取类型是否为FactoryBean **/
 		Boolean result = mbd.isFactoryBean;
 		if (result == null) {
+			/** 预测Bean的Class类型  **/
 			Class<?> beanType = predictBeanType(beanName, mbd, FactoryBean.class);
+			/** 判断类型是否为FactoryBean **/
 			result = (beanType != null && FactoryBean.class.isAssignableFrom(beanType));
 			mbd.isFactoryBean = result;
 		}
+		/** 返回结果 **/
 		return result;
 	}
 
