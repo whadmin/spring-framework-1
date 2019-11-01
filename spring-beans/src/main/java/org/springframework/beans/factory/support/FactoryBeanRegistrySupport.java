@@ -43,7 +43,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 
 	/**
-	 * 返回此FactoryBean创建的对象的Class类型
+	 * 获取FactoryBean实例创建的对象的Class类型 @see factoryBean.getObjectType()
 	 */
 	@Nullable
 	protected Class<?> getTypeForFactoryBean(final FactoryBean<?> factoryBean) {

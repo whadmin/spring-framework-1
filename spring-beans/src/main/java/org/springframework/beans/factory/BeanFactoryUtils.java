@@ -61,7 +61,7 @@ public abstract class BeanFactoryUtils {
 
 
 	/**
-	 * 返回bean名称是否存在“&”前缀
+	 * 名称是否以&作为前缀(以&作为前缀对于类型FacrtoryBean返回该对象实例本身)
 	 */
 	public static boolean isFactoryDereference(@Nullable String name) {
 		return (name != null && name.startsWith(BeanFactory.FACTORY_BEAN_PREFIX));

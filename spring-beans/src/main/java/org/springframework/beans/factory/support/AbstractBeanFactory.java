@@ -219,13 +219,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * 根据参数返回bean实例
-	 * @param name 要获取 Bean 的名字 或 别名
-	 * @param requiredType 要获取 bean Class类型
-	 * @param args 创建 Bean 时传递的参数
-	 * @param typeCheckOnly 是否仅仅进行类型检查
-	 * @return bean实例
-	 * @throws BeansException
+	 * 根据名称，类型，参数获取bean实例
 	 */
 	@SuppressWarnings("unchecked")
 	protected <T> T doGetBean(final String name, @Nullable final Class<T> requiredType,
@@ -426,12 +420,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * 	  getBean("&car") 只需要加上前缀返回FactoryBean实例本身
 	 * 对于非FactoryBean
 	 *    直接返回参数 beanInstance
-	 *
-	 * @param beanInstance bean实例
-	 * @param name 名称，可能包含BeanFactory#FACTORY_BEAN_PREFIX前缀，也可能是别名
-	 * @param beanName 规范Bean名称，剥离BeanFactory.FACTORY_BEAN_PREFIX
-	 * @param mbd 合并后BeanDefinition（bean之间存在父子关系）
-	 * @return bean实例
 	 */
 	protected Object getObjectForBeanInstance(
 			Object beanInstance, String name, String beanName, @Nullable RootBeanDefinition mbd) {
@@ -499,19 +487,20 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	}
 
 	/**
-	 * 判断指定名称bean，是否注册到IOC容器
+	 * 判断指定名称bean，是否注册到BeanFactory
 	 */
 	@Override
 	public boolean containsBean(String name) {
 		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
-		/** 1 判断指定名称bean是否存在于单例bean实例缓存中或已在IOC容器注册BeanDefinition**/
+		/** 1 判断是是否存在于单例bean实例缓存中或已在IOC容器注册BeanDefinition **/
 		if (containsSingleton(beanName) || containsBeanDefinition(beanName)) {
-			/**  bean名称不以“&”作为前缀或以“&”作为前缀类型为FactoryBean返回true **/
+			/**  1.1 bean名称不以“&”作为前缀返回true **/
+			/**  1.2 bean名称以“&”作为前缀且bean类型为FactoryBean返回true **/
 			return (!BeanFactoryUtils.isFactoryDereference(name) || isFactoryBean(name));
 		}
-		/** 2 如果不存在，尝试交给从父BeanFactory判断 **/
+		/** 2 如果不存在，判断是否注册到父BeanFactory判断 **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		return (parentBeanFactory != null && parentBeanFactory.containsBean(originalBeanName(name)));
 	}
@@ -524,12 +513,17 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
+		/** 1 从单例bean对象缓存中获取bean实例 **/
 		Object beanInstance = getSingleton(beanName, false);
+        /** 如果单例bean对象缓存中 **/
 		if (beanInstance != null) {
+			/** bean实例类型为 FactoryBean **/
 			if (beanInstance instanceof FactoryBean) {
 				return (BeanFactoryUtils.isFactoryDereference(name) || ((FactoryBean<?>) beanInstance).isSingleton());
 			}
+			/** bean实例类型非 FactoryBean **/
 			else {
+				/** bean名称不以“&”作为前缀返回true **/
 				return !BeanFactoryUtils.isFactoryDereference(name);
 			}
 		}
@@ -772,29 +766,37 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return getType(name, true);
 	}
 
+	/**
+	 * 根据bean的名字，获取在IOC容器中得到bean实例Class类型
+	 */
 	@Override
 	@Nullable
 	public Class<?> getType(String name, boolean allowFactoryBeanInit) throws NoSuchBeanDefinitionException {
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
-		// Check manually registered singletons.
+		/** 1  从单例bean对象缓存中获取bean实例，如果存在，通过获取bean实例判断其Class类型 **/
 		Object beanInstance = getSingleton(beanName, false);
+		/**   如果存在于单例bean对象缓存中且Class类型不为NullBean **/
 		if (beanInstance != null && beanInstance.getClass() != NullBean.class) {
+			/** bean实例类型为 FactoryBean 且 名称不以&作为前缀 通过factoryBean.getObjectType()获取创建对象Class类型  **/
 			if (beanInstance instanceof FactoryBean && !BeanFactoryUtils.isFactoryDereference(name)) {
 				return getTypeForFactoryBean((FactoryBean<?>) beanInstance);
 			}
+			/** bean实例类型非 FactoryBean，通过beanInstance.getClass()获取bean实例Class类型 **/
 			else {
 				return beanInstance.getClass();
 			}
 		}
 
-		// No singleton instance found -> check bean definition.
+		/** 2 从父BeanFactory获取bean实例Class类型  **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-			// No bean definition found in this factory -> delegate to parent.
 			return parentBeanFactory.getType(originalBeanName(name));
 		}
 
+
+		/** 3 从合并后BeanDefinitions缓存 **/
 		RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 
 		// Check decorated bean definition, if any: We assume it'll be easier
@@ -825,31 +827,48 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		}
 	}
 
+	/**
+	 * 根据bean的名字，获取别名
+	 */
 	@Override
 	public String[] getAliases(String name) {
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
+
+		/** 定义返回的别名列表 **/
 		List<String> aliases = new ArrayList<>();
+
+		/** 名称是否以&作为前缀 **/
 		boolean factoryPrefix = name.startsWith(FACTORY_BEAN_PREFIX);
+
+		/** 定义bean全名称（如果）  **/
 		String fullBeanName = beanName;
+		/** 如果名称是否以&作为前缀,bean全名称追加&作为前缀 **/
 		if (factoryPrefix) {
 			fullBeanName = FACTORY_BEAN_PREFIX + beanName;
 		}
+		/** 1 如果传入name是别名(beanName!=name)添加到aliases列表 **/
 		if (!fullBeanName.equals(name)) {
 			aliases.add(fullBeanName);
 		}
+		/** 2 获取指定名称的别名 **/
 		String[] retrievedAliases = super.getAliases(beanName);
 		for (String retrievedAlias : retrievedAliases) {
+			/** 如果名称是否以&作为前缀,返回别名追加&作为前缀 **/
 			String alias = (factoryPrefix ? FACTORY_BEAN_PREFIX : "") + retrievedAlias;
+			/** 别名不等于传入的name,添加到列表 **/
 			if (!alias.equals(name)) {
 				aliases.add(alias);
 			}
 		}
+		/** 3 如果指定name在当前BeanFactory未定义，从父BeanFactory获取别名添加到别名列表  **/
 		if (!containsSingleton(beanName) && !containsBeanDefinition(beanName)) {
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null) {
 				aliases.addAll(Arrays.asList(parentBeanFactory.getAliases(fullBeanName)));
 			}
 		}
+		/** 4 将列表转换为数组返回 **/
 		return StringUtils.toStringArray(aliases);
 	}
 
