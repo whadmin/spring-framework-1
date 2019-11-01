@@ -513,43 +513,49 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
-		/** 1 从单例bean对象缓存中获取bean实例 **/
+		/** 1 从单例bean对象缓存中获取bean实例，通过获取bean实例判断是否被定义成单实例 **/
 		Object beanInstance = getSingleton(beanName, false);
-        /** 如果单例bean对象缓存中 **/
 		if (beanInstance != null) {
-			/** bean实例类型为 FactoryBean **/
+			/** 1.1 bean实例类型为 FactoryBean **/
 			if (beanInstance instanceof FactoryBean) {
+				/**  名称以&作为前缀返回true **/
+				/**  名称是不以&作为前缀 返回((FactoryBean<?>) beanInstance).isSingleton() **/
 				return (BeanFactoryUtils.isFactoryDereference(name) || ((FactoryBean<?>) beanInstance).isSingleton());
 			}
-			/** bean实例类型非 FactoryBean **/
+			/** 1.2 bean实例类型非 FactoryBean **/
 			else {
 				/** bean名称不以“&”作为前缀返回true **/
 				return !BeanFactoryUtils.isFactoryDereference(name);
 			}
 		}
 
-		// No singleton instance found -> check bean definition.
+		/** 2 如果单例bean对象缓存中不存在，判断是否在父BeanFactory是定义成单实例 **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-			// No bean definition found in this factory -> delegate to parent.
 			return parentBeanFactory.isSingleton(originalBeanName(name));
 		}
 
+        /** 3 从合并后BeanDefinitions缓存中获取，合并合并后BeanDefinitions **/
 		RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
-
-		// In case of FactoryBean, return singleton status of created object if not a dereference.
+		/** 3.1 判断是否被定义为单例 **/
 		if (mbd.isSingleton()) {
+			/** 3.1.1 bean实例类型为 FactoryBean**/
 			if (isFactoryBean(beanName, mbd)) {
+				/**  名称以&作为前缀返回true **/
 				if (BeanFactoryUtils.isFactoryDereference(name)) {
 					return true;
 				}
+				/**  名称是不以&作为前缀 返回((FactoryBean<?>) beanInstance).isSingleton() **/
 				FactoryBean<?> factoryBean = (FactoryBean<?>) getBean(FACTORY_BEAN_PREFIX + beanName);
 				return factoryBean.isSingleton();
 			}
+			/** 3.1.2 bean实例类型非 FactoryBean**/
 			else {
+				/** bean名称不以“&”作为前缀返回true **/
 				return !BeanFactoryUtils.isFactoryDereference(name);
 			}
 		}
+		/** 3.2 返回false **/
 		else {
 			return false;
 		}
