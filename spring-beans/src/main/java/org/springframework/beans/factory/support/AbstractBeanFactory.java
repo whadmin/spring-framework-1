@@ -529,13 +529,13 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 
-		/** 2 如果单例bean对象缓存中不存在，判断是否在父BeanFactory是定义成单实例 **/
+		/** 2 如果单例bean对象缓存中不存在且BeanDefinition没有注册到BeanFacory，从父BeanFactory判断是否被定义成单实例 **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 			return parentBeanFactory.isSingleton(originalBeanName(name));
 		}
 
-        /** 3 从合并后BeanDefinitions缓存中获取，合并合并后BeanDefinitions **/
+        /** 3 从合并后BeanDefinitions缓存中获取合并后BeanDefinitions，通过判断合并后BeanDefinitions确定是否被定义成单实例 **/
 		RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 		/** 3.1 判断是否被定义为单例 **/
 		if (mbd.isSingleton()) {
@@ -561,19 +561,26 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		}
 	}
 
+	/**
+	 * bean 是否被定义成原型实例
+	 */
 	@Override
 	public boolean isPrototype(String name) throws NoSuchBeanDefinitionException {
+		/** 获取name作为别名对应bean名称 **/
 		String beanName = transformedBeanName(name);
 
+		/** 1 如果单BeanDefinition没有注册到BeanFacory，从父BeanFactory判断是否被定义成原型实例 **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
-			// No bean definition found in this factory -> delegate to parent.
 			return parentBeanFactory.isPrototype(originalBeanName(name));
 		}
 
+		/** 2 从合并后BeanDefinitions缓存中获取合并后BeanDefinitions，通过判断合并后BeanDefinitions确定是否被定义成原型实例 **/
 		RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
+		/** 3.1 判断是否被定义成原型实例 **/
 		if (mbd.isPrototype()) {
-			// In case of FactoryBean, return singleton status of created object if not a dereference.
+			/**  名称以&作为前缀返回true **/
+			/**  名称是不以&作为前缀 返回((FactoryBean<?>) beanInstance).isSingleton() **/
 			return (!BeanFactoryUtils.isFactoryDereference(name) || isFactoryBean(beanName, mbd));
 		}
 
@@ -609,20 +616,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		return isTypeMatch(name, ResolvableType.forRawClass(typeToMatch));
 	}
 
-	/**
-	 * Internal extended variant of {@link #isTypeMatch(String, ResolvableType)}
-	 * to check whether the bean with the given name matches the specified type. Allow
-	 * additional constraints to be applied to ensure that beans are not created early.
-	 * @param name the name of the bean to query
-	 * @param typeToMatch the type to match against (as a
-	 * {@code ResolvableType})
-	 * @return {@code true} if the bean type matches, {@code false} if it
-	 * doesn't match or cannot be determined yet
-	 * @throws NoSuchBeanDefinitionException if there is no bean with the given name
-	 * @since 5.2
-	 * @see #getBean
-	 * @see #getType
-	 */
+
 	protected boolean isTypeMatch(String name, ResolvableType typeToMatch, boolean allowFactoryBeanInit)
 			throws NoSuchBeanDefinitionException {
 
