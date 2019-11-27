@@ -21,24 +21,25 @@ import java.lang.reflect.Method;
 import org.springframework.context.ApplicationListener;
 
 /**
- * Strategy interface for creating {@link ApplicationListener} for methods
- * annotated with {@link EventListener}.
  *
- * @author Stephane Nicoll
+ * 创建{@link ApplicationListener}的工厂接口。
+ * 将{@link EventListener}注解修饰的方法通过此接口创建{@link ApplicationListener}实例
  * @since 4.2
  */
 public interface EventListenerFactory {
 
 	/**
-	 * Specify if this factory supports the specified {@link Method}.
-	 * @param method an {@link EventListener} annotated method
-	 * @return {@code true} if this factory supports the specified method
+	 * 指定此工厂是否支持指定的{@link方法}。
+	 *
+	 * @param method {@link EventListener}注解修饰方法
+	 * @return  如果该工厂支持指定的方法返回{@code true}
 	 */
 	boolean supportsMethod(Method method);
 
 	/**
 	 * Create an {@link ApplicationListener} for the specified method.
-	 * @param beanName the name of the bean
+	 * 
+	 * @param beanName bean的名称
 	 * @param type the target type of the instance
 	 * @param method the {@link EventListener} annotated method
 	 * @return an application listener, suitable to invoke the specified method

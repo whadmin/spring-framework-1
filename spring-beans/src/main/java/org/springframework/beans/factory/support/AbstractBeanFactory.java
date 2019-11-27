@@ -229,10 +229,10 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		final String beanName = transformedBeanName(name);
 		Object bean;
 
-		/** 1 从单例bean对象缓存中获取获取指定beanName名称对应bean实例 **/
+		/** 从单例bean对象缓存中获取获取指定beanName名称对应bean实例 **/
 		Object sharedInstance = getSingleton(beanName);
 
-		/** 2.1 单例bean对象缓存中存在 获取bean对象**/
+		/** 1 单例bean对象缓存中存在 获取bean对象**/
 		if (sharedInstance != null && args == null) {
 			if (logger.isTraceEnabled()) {
 				if (isSingletonCurrentlyInCreation(beanName)) {
@@ -246,14 +246,14 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			/** 2 获取bean对象，这里主要是针对实现FactoryBean接口特殊Bean处理 **/
 			bean = getObjectForBeanInstance(sharedInstance, name, beanName, null);
 		}
-		/** 2.2 单例bean对象缓存中不存在bean实例 **/
+		/** 2 单例bean对象缓存中不存在bean实例 **/
 		else {
-			/** 2.2.1 检查beanName是否作为beanName原型bean是否当前正在创建（在当前线程内）。发生循环依赖**/
+			/** 2.1 检查beanName是否作为原型bean。发生循环依赖**/
 			if (isPrototypeCurrentlyInCreation(beanName)) {
 				throw new BeanCurrentlyInCreationException(beanName);
 			}
 
-			/** 2.2.2 如果当前beanName并未注册BeanDefinition且存在父parentBeanFactory，尝试从父parentBeanFactory获取Bean **/
+			/** 2.2.如果没有注册BeanDefinition到BeanFacory，从父BeanFactory获取Bean **/
 			BeanFactory parentBeanFactory = getParentBeanFactory();
 			if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 				String nameToLookup = originalBeanName(name);
@@ -272,9 +272,8 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-			/** 2.2.3 执行其他检查 **/
+			/** 2.3 将beanName  标记为已创建 **/
 			if (!typeCheckOnly) {
-				/** 将beanName  标记为已创建 **/
 				markBeanAsCreated(beanName);
 			}
 

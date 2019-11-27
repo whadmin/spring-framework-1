@@ -23,25 +23,28 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
- * 标准{@link ApplicationListener}接口的扩展变体,
- * 支持监听器能否选择触发事件类型，源类型，同时支持排序
+ * 针对{@link ApplicationListener}接口的进行扩展了
+ *
+ * 1 支持监听器能否选择触发事件类型，源类型，
+ *
+ * 2 支持监听器排序优先级
  */
 public interface GenericApplicationListener extends ApplicationListener<ApplicationEvent>, Ordered {
 
 	/**
-	 * 确定此侦听器是否实际支持给定的事件 ResolvableType 类型
+	 * 当前监听器是否支持给定的事件类型
 	 */
 	boolean supportsEventType(ResolvableType eventType);
 
 	/**
-	 * 确定此侦听器是否实际支持给定的源类型
+	 * 当前监听器是否支持给定的源类型
 	 */
 	default boolean supportsSourceType(@Nullable Class<?> sourceType) {
 		return true;
 	}
 
 	/**
-	 * 侦听器排序的优先级
+	 * 监听器排序的优先级
 	 */
 	@Override
 	default int getOrder() {
