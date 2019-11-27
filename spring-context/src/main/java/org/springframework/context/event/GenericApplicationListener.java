@@ -28,6 +28,9 @@ import org.springframework.lang.Nullable;
  * 1 支持监听器能否选择触发事件类型，源类型，
  *
  * 2 支持监听器排序优先级
+ *
+ * 相对于{@link SmartApplicationListener}
+ * 针对支持给定事件类型指定的是ResolvableType，可以针对泛型进行识别是其增强版本
  */
 public interface GenericApplicationListener extends ApplicationListener<ApplicationEvent>, Ordered {
 
