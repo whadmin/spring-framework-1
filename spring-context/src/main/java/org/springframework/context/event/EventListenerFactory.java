@@ -21,9 +21,10 @@ import java.lang.reflect.Method;
 import org.springframework.context.ApplicationListener;
 
 /**
+ * 创建{@link ApplicationListener}的工厂
+ * <p>
+ * 负责将{@link EventListener}注解修饰的方法，通过工厂创建为{@link ApplicationListener}实例
  *
- * 创建{@link ApplicationListener}的工厂接口。
- * 将{@link EventListener}注解修饰的方法通过此接口创建{@link ApplicationListener}实例
  * @since 4.2
  */
 public interface EventListenerFactory {
@@ -32,17 +33,17 @@ public interface EventListenerFactory {
 	 * 指定此工厂是否支持指定的{@link方法}。
 	 *
 	 * @param method {@link EventListener}注解修饰方法
-	 * @return  如果该工厂支持指定的方法返回{@code true}
+	 * @return 如果该工厂支持指定的方法返回{@code true}
 	 */
 	boolean supportsMethod(Method method);
 
 	/**
-	 * Create an {@link ApplicationListener} for the specified method.
-	 * 
+	 * 为{@link EventListener}注解修饰的方法，创建一个{@link ApplicationListener}实例
+	 *
 	 * @param beanName bean的名称
-	 * @param type the target type of the instance
-	 * @param method the {@link EventListener} annotated method
-	 * @return an application listener, suitable to invoke the specified method
+	 * @param type     实例的目标类型
+	 * @param method   {@link EventListener}注解修饰方法
+	 * @return {@link ApplicationListener} 监听器
 	 */
 	ApplicationListener<?> createApplicationListener(String beanName, Class<?> type, Method method);
 

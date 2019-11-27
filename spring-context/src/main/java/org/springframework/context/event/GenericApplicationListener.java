@@ -23,7 +23,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
- * 针对{@link ApplicationListener}接口的进行扩展了
+ * 针对{@link ApplicationListener}接口的进行扩展了，扩展功能如下:
  *
  * 1 支持监听器能否选择触发事件类型，源类型，
  *

@@ -22,42 +22,63 @@ import org.springframework.core.ResolvableType;
 import org.springframework.lang.Nullable;
 
 /**
- * 管理多个{@link ApplicationListener}监听器并向其发布 ApplicationEvent 事件
+ * 应用事件{@link ApplicationEvent}广播器接口,核心功能如下：
+ * <p>
+ * 1 管理多个ApplicationListener对象，其中包括（注册，删除）
+ * <p>
+ * 2 发布{@link ApplicationEvent} 事件
  */
 public interface ApplicationEventMulticaster {
 
+
 	/**
-	 * 添加一个侦听器以通知所有事件。
+	 * 注册监听器{@link ApplicationListener}
+	 *
+	 * @param listener 监听器对象
 	 */
 	void addApplicationListener(ApplicationListener<?> listener);
 
 	/**
-	 * 添加一个侦听器bean，以通知所有事件
+	 * 注册监听器{@link ApplicationListener}
+	 *
+	 * @param listenerBeanName 监听器对象作为bean的名称
 	 */
 	void addApplicationListenerBean(String listenerBeanName);
 
+
 	/**
-	 * 从通知列表中删除一个侦听器。
+	 * 删除监听器{@link ApplicationListener}
+	 *
+	 * @param listener 监听器对象
 	 */
 	void removeApplicationListener(ApplicationListener<?> listener);
 
+
 	/**
-	 * 从通知列表中删除一个侦听器bean。
+	 * 删除监听器{@link ApplicationListener}
+	 *
+	 * @param listenerBeanName 监听器对象作为bean的名称
 	 */
 	void removeApplicationListenerBean(String listenerBeanName);
 
 	/**
-	 * 删除在此多播器上注册的所有侦听器。
+	 * 删除所有{@link ApplicationListener}
 	 */
 	void removeAllListeners();
 
 	/**
-	 * 多播 ApplicationEvent 事件给注册的监听器
+	 * 发布{@link ApplicationEvent} 事件
+	 *
+	 * @param event {@link ApplicationEvent} 事件
 	 */
 	void multicastEvent(ApplicationEvent event);
 
+
 	/**
-	 * 多播 ApplicationEvent 事件给注册的监听器
+	 * 发布{@link ApplicationEvent} 事件
+	 *
+	 * @param event     {@link ApplicationEvent} 事件
+	 * @param eventType 事件的类型
 	 */
 	void multicastEvent(ApplicationEvent event, @Nullable ResolvableType eventType);
 
