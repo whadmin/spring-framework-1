@@ -28,8 +28,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 /**
- * {@link GenericApplicationListener} adapter that determines supported event types
- * through introspecting the generically declared type of the target listener.
+ * {@link GenericApplicationListener}适配器，通过内省目标侦听器的一般声明类型来确定支持的事件类型。
  *
  * @author Juergen Hoeller
  * @author Stephane Nicoll
@@ -87,7 +86,7 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 			Class<? extends ApplicationEvent> eventClass = (Class<? extends ApplicationEvent>) eventType.resolve();
 			return (eventClass != null && ((SmartApplicationListener) this.delegate).supportsEventType(eventClass));
 		}
-		/** 通过 **/
+		/** 非SmartApplicationListener，通过declaredEventType 判断是否匹配 **/
 		else {
 			return (this.declaredEventType == null || this.declaredEventType.isAssignableFrom(eventType));
 		}
@@ -112,7 +111,10 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 
 
 	/**
-	 * 获取listener监听器指定父类ApplicationListener泛型对应ResolvableType类型
+	 * 获取listener监听器支持的类型
+	 *
+	 * StringEventListener implements ApplicationListener<GenericTestEvent<String>>
+	 * 即获取<GenericTestEvent<String>>
 	 */
 	@Nullable
 	private static ResolvableType resolveDeclaredEventType(ApplicationListener<ApplicationEvent> listener) {
@@ -126,9 +128,7 @@ public class GenericApplicationListenerAdapter implements GenericApplicationList
 		return declaredEventType;
 	}
 
-	/**
-	 * 获取Class指定父类ApplicationListener泛型对应ResolvableType类型
-	 */
+
 	@Nullable
 	static ResolvableType resolveDeclaredEventType(Class<?> listenerType) {
 		ResolvableType eventType = eventTypeCache.get(listenerType);

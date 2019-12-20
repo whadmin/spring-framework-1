@@ -29,22 +29,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.ErrorHandler;
 
 /**
- * Simple implementation of the {@link ApplicationEventMulticaster} interface.
- *
- * <p>Multicasts all events to all registered listeners, leaving it up to
- * the listeners to ignore events that they are not interested in.
- * Listeners will usually perform corresponding {@code instanceof}
- * checks on the passed-in event object.
- *
- * <p>By default, all listeners are invoked in the calling thread.
- * This allows the danger of a rogue listener blocking the entire application,
- * but adds minimal overhead. Specify an alternative task executor to have
- * listeners executed in different threads, for example from a thread pool.
- *
- * @author Rod Johnson
- * @author Juergen Hoeller
- * @author Stephane Nicoll
- * @see #setTaskExecutor
+ * {@link ApplicationEventMulticaster}接口的简单实现。
  */
 public class SimpleApplicationEventMulticaster extends AbstractApplicationEventMulticaster {
 
@@ -56,13 +41,13 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 
 
 	/**
-	 * Create a new SimpleApplicationEventMulticaster.
+	 * 实例化SimpleApplicationEventMulticaster
 	 */
 	public SimpleApplicationEventMulticaster() {
 	}
 
 	/**
-	 * Create a new SimpleApplicationEventMulticaster for the given BeanFactory.
+	 * 实例化SimpleApplicationEventMulticaster，并给定BeanFactory
 	 */
 	public SimpleApplicationEventMulticaster(BeanFactory beanFactory) {
 		setBeanFactory(beanFactory);
@@ -70,23 +55,14 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 
 
 	/**
-	 * Set a custom executor (typically a {@link org.springframework.core.task.TaskExecutor})
-	 * to invoke each listener with.
-	 * <p>Default is equivalent to {@link org.springframework.core.task.SyncTaskExecutor},
-	 * executing all listeners synchronously in the calling thread.
-	 * <p>Consider specifying an asynchronous task executor here to not block the
-	 * caller until all listeners have been executed. However, note that asynchronous
-	 * execution will not participate in the caller's thread context (class loader,
-	 * transaction association) unless the TaskExecutor explicitly supports this.
-	 * @see org.springframework.core.task.SyncTaskExecutor
-	 * @see org.springframework.core.task.SimpleAsyncTaskExecutor
+	 * 设置任务执行器
 	 */
 	public void setTaskExecutor(@Nullable Executor taskExecutor) {
 		this.taskExecutor = taskExecutor;
 	}
 
 	/**
-	 * Return the current task executor for this multicaster.
+	 * 获取任务执行器
 	 */
 	@Nullable
 	protected Executor getTaskExecutor() {
@@ -94,26 +70,14 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	}
 
 	/**
-	 * Set the {@link ErrorHandler} to invoke in case an exception is thrown
-	 * from a listener.
-	 * <p>Default is none, with a listener exception stopping the current
-	 * multicast and getting propagated to the publisher of the current event.
-	 * If a {@linkplain #setTaskExecutor task executor} is specified, each
-	 * individual listener exception will get propagated to the executor but
-	 * won't necessarily stop execution of other listeners.
-	 * <p>Consider setting an {@link ErrorHandler} implementation that catches
-	 * and logs exceptions (a la
-	 * {@link org.springframework.scheduling.support.TaskUtils#LOG_AND_SUPPRESS_ERROR_HANDLER})
-	 * or an implementation that logs exceptions while nevertheless propagating them
-	 * (e.g. {@link org.springframework.scheduling.support.TaskUtils#LOG_AND_PROPAGATE_ERROR_HANDLER}).
-	 * @since 4.1
+	 * 设置错误处理器
 	 */
 	public void setErrorHandler(@Nullable ErrorHandler errorHandler) {
 		this.errorHandler = errorHandler;
 	}
 
 	/**
-	 * Return the current error handler for this multicaster.
+	 * 获取错误处理器
 	 * @since 4.1
 	 */
 	@Nullable
@@ -122,50 +86,88 @@ public class SimpleApplicationEventMulticaster extends AbstractApplicationEventM
 	}
 
 
+	/**
+	 * 发布事件
+	 */
 	@Override
 	public void multicastEvent(ApplicationEvent event) {
 		multicastEvent(event, resolveDefaultEventType(event));
 	}
 
+	/**
+	 * 发布事件
+	 * @param event     {@link ApplicationEvent} 事件
+	 * @param eventType 事件的类型
+	 */
 	@Override
 	public void multicastEvent(final ApplicationEvent event, @Nullable ResolvableType eventType) {
+		// 1 如果未指定eventType，通过ApplicationEvent对象获取事件类型
 		ResolvableType type = (eventType != null ? eventType : resolveDefaultEventType(event));
+		// 2 获取执行处理器
 		Executor executor = getTaskExecutor();
+		// 3 获取满足匹配条件的监听器（条件包括事件类型和事件源）
 		for (ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+			// 4 如果执行处理器存在，通过执行处理器触发事件，并设置监听器订阅处理（可能是异步）
 			if (executor != null) {
 				executor.execute(() -> invokeListener(listener, event));
 			}
+			// 5 同步调用监听器订阅处理触发事件
 			else {
 				invokeListener(listener, event);
 			}
 		}
 	}
 
+	/**
+	 * 获取对象接口类型类型
+	 *
+	 * public class GenericTestEvent<T> extends ApplicationEvent {
+	 *
+	 *     private final T payload;
+	 *
+	 *     public GenericTestEvent(Object source, T payload) {
+	 *         super(source);
+	 *         this.payload = payload;
+	 *     }
+	 *
+	 *com.spring.ioc.appliction.event_new.event.GenericTestEvent<?>
+	 * @param event
+	 * @return
+	 */
 	private ResolvableType resolveDefaultEventType(ApplicationEvent event) {
 		return ResolvableType.forInstance(event);
 	}
 
 	/**
-	 * Invoke the given listener with the given event.
-	 * @param listener the ApplicationListener to invoke
-	 * @param event the current event to propagate
-	 * @since 4.1
+	 * 指定监听器订阅处理事件
+	 * @param listener 订阅监听器
+	 * @param event 触发事件
 	 */
 	protected void invokeListener(ApplicationListener<?> listener, ApplicationEvent event) {
+		//1 获取错误处理器
 		ErrorHandler errorHandler = getErrorHandler();
+		//2 如果设置错误处理器，发生异常交给错误处理器处理
 		if (errorHandler != null) {
 			try {
+				//指定监听器订阅处理事件
 				doInvokeListener(listener, event);
 			}
 			catch (Throwable err) {
+				// 错误处理器处理异常
 				errorHandler.handleError(err);
 			}
 		}
 		else {
+			//指定监听器订阅处理事件
 			doInvokeListener(listener, event);
 		}
 	}
 
+	/**
+	 * 指定监听器订阅处理事件
+	 * @param listener 订阅监听器
+	 * @param event 触发事件
+	 */
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private void doInvokeListener(ApplicationListener listener, ApplicationEvent event) {
 		try {
