@@ -332,17 +332,22 @@ public interface BeanDefinition extends AttributeAccessor, BeanMetadataElement {
 	boolean isAbstract();
 
 	/**
-	 * Return a description of the resource that this bean definition
-	 * came from (for the purpose of showing context in case of errors).
+	 * 返回对该bean定义的资源的描述
+	 *
+	 * 通常我们会将原始BeanDefinition 封装到BeanDefinitionResource中，通过getDescription()获取资源描述
+	 * public String getResourceDescription()
+	 * 		return (this.resource != null ? this.resource.getDescription() : null);
+	 *
 	 */
 	@Nullable
 	String getResourceDescription();
 
 	/**
-	 * Return the originating BeanDefinition, or {@code null} if none.
-	 * Allows for retrieving the decorated bean definition, if any.
-	 * <p>Note that this method returns the immediate originator. Iterate through the
-	 * originator chain to find the original BeanDefinition as defined by the user.
+	 * 返回原始的BeanDefinition, 如果不存在返回{@code null}
+	 *
+	 * 通常我们会将原始BeanDefinition 封装到BeanDefinitionResource中
+	 * public void setOriginatingBeanDefinition(BeanDefinition originatingBd)
+	 * 		this.resource = new BeanDefinitionResource(originatingBd);
 	 */
 	@Nullable
 	BeanDefinition getOriginatingBeanDefinition();

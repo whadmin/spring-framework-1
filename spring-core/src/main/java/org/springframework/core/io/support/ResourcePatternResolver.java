@@ -27,7 +27,7 @@ import org.springframework.core.io.ResourceLoader;
 public interface ResourcePatternResolver extends ResourceLoader {
 
 	/**
-	 * 类路径中所有匹配资源URL前缀
+	 * 匹配 classpath* 类路径下所有类资源URL前缀
 	 */
 	String CLASSPATH_ALL_URL_PREFIX = "classpath*:";
 
