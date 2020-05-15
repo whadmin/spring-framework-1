@@ -23,65 +23,67 @@ import org.springframework.context.ApplicationContextException;
 import org.springframework.util.ObjectUtils;
 
 /**
- * Abstract implementation of the {@link org.springframework.web.servlet.HandlerMapping}
- * interface, detecting URL mappings for handler beans through introspection of all
- * defined beans in the application context.
  *
- * @author Juergen Hoeller
- * @since 2.5
- * @see #determineUrlsForHandler
+ * 检查应用程序上下文application context中所有bean（类型），将满足作为处理器Handler条件的Bean进行注册
+ *
+ * 1 这里每个Bean对应Handler，却并没有要求实现Controller接口或Controller子实现，但我们知道在实现上是必须的
+ *
+ *    public class HelloWorldController implements Controller
+ *
+ * 2 这里满足作为处理器Handler条件是调用determineUrlsForHandler模板方法能否获取请求Url
+ *
  */
 public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHandlerMapping {
 
+	/**
+	 * 如果当前应用程序上下文application context存在父应用程序上下文application context
+	 * 是否将父应用程序上下文application context中每一个Bean注册为一个处理器Handler
+	 */
 	private boolean detectHandlersInAncestorContexts = false;
 
 
-	/**
-	 * Set whether to detect handler beans in ancestor ApplicationContexts.
-	 * <p>Default is "false": Only handler beans in the current ApplicationContext
-	 * will be detected, i.e. only in the context that this HandlerMapping itself
-	 * is defined in (typically the current DispatcherServlet's context).
-	 * <p>Switch this flag on to detect handler beans in ancestor contexts
-	 * (typically the Spring root WebApplicationContext) as well.
-	 */
 	public void setDetectHandlersInAncestorContexts(boolean detectHandlersInAncestorContexts) {
 		this.detectHandlersInAncestorContexts = detectHandlersInAncestorContexts;
 	}
 
 
 	/**
-	 * Calls the {@link #detectHandlers()} method in addition to the
-	 * superclass's initialization.
+	 * 重写初始化应用程序上下文application context
 	 */
 	@Override
 	public void initApplicationContext() throws ApplicationContextException {
+		//1 调用父类{@link super#initApplicationContext()}
 		super.initApplicationContext();
+		//2 将检查应用程序上下文application context中所有bean（类型）,并将每一个Bean注册为一个处理器Handler
 		detectHandlers();
 	}
 
 	/**
-	 * Register all handlers found in the current ApplicationContext.
-	 * <p>The actual URL determination for a handler is up to the concrete
-	 * {@link #determineUrlsForHandler(String)} implementation. A bean for
-	 * which no such URLs could be determined is simply not considered a handler.
-	 * @throws org.springframework.beans.BeansException if the handler couldn't be registered
+	 * 检查应用程序上下文application context中所有bean（类型），将满足作为处理器Handler条件的Bean进行注册
+	 * 1 这里每个Bean对应Handler
+	 * 2 这里满足作为处理器Handler条件是调用determineUrlsForHandler模板方法能否获取请求Url
 	 * @see #determineUrlsForHandler(String)
 	 */
 	protected void detectHandlers() throws BeansException {
+		//获取实际使用的ApplicationContext。
 		ApplicationContext applicationContext = obtainApplicationContext();
+		//检查应用程序上下文application context中所有bean（类型）
+		//如果设置启用detectHandlersInAncestorContexts，同时会从父程序上下文application context中所有bean，并将其合并
 		String[] beanNames = (this.detectHandlersInAncestorContexts ?
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext, Object.class) :
 				applicationContext.getBeanNamesForType(Object.class));
 
-		// Take any bean name that we can determine URLs for.
+		//遍历beanNames,获取bean作为Handler关联的请求Url
 		for (String beanName : beanNames) {
+			//确定给定处理程序bean的URL。
 			String[] urls = determineUrlsForHandler(beanName);
+			//将能获取配置请求URLbean，作为一个Bean注册
 			if (!ObjectUtils.isEmpty(urls)) {
 				// URL paths found: Let's consider it a handler.
 				registerHandler(urls, beanName);
 			}
 		}
-
+		//打印日志
 		if ((logger.isDebugEnabled() && !getHandlerMap().isEmpty()) || logger.isTraceEnabled()) {
 			logger.debug("Detected " + getHandlerMap().size() + " mappings in " + formatMappingName());
 		}
@@ -89,9 +91,9 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 
 
 	/**
-	 * Determine the URLs for the given handler bean.
-	 * @param beanName the name of the candidate bean
-	 * @return the URLs determined for the bean, or an empty array if none
+	 * 确定给定处理程序bean的URL。
+	 * @param beanName 候选bean的名称
+	 * @return 为bean确定的URL，如果没有，则返回一个空数组
 	 */
 	protected abstract String[] determineUrlsForHandler(String beanName);
 
