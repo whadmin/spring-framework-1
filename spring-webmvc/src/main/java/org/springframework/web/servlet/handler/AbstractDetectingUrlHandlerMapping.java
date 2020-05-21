@@ -37,7 +37,7 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 
 	/**
 	 * 如果当前应用程序上下文application context存在父应用程序上下文application context
-	 * 是否将父应用程序上下文application context中每一个Bean注册为一个处理器Handler
+	 * 是否将父应用程序上下文application context中查找处理器Handler
 	 */
 	private boolean detectHandlersInAncestorContexts = false;
 

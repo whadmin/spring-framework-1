@@ -207,12 +207,7 @@ public abstract class ReflectionUtils {
 	// Method handling
 
 	/**
-	 * Attempt to find a {@link Method} on the supplied class with the supplied name
-	 * and no parameters. Searches all superclasses up to {@code Object}.
-	 * <p>Returns {@code null} if no {@link Method} can be found.
-	 * @param clazz the class to introspect
-	 * @param name the name of the method
-	 * @return the Method object, or {@code null} if none found
+	 * 尝试在指定的类上以及查找指定方法名称和无参数的方法
 	 */
 	@Nullable
 	public static Method findMethod(Class<?> clazz, String name) {
@@ -220,24 +215,27 @@ public abstract class ReflectionUtils {
 	}
 
 	/**
-	 * Attempt to find a {@link Method} on the supplied class with the supplied name
-	 * and parameter types. Searches all superclasses up to {@code Object}.
-	 * <p>Returns {@code null} if no {@link Method} can be found.
-	 * @param clazz the class to introspect
-	 * @param name the name of the method
-	 * @param paramTypes the parameter types of the method
-	 * (may be {@code null} to indicate any signature)
-	 * @return the Method object, or {@code null} if none found
+	 * 尝试在指定的类上或接口上查找指定方法名称和参数类型的方法
 	 */
 	@Nullable
 	public static Method findMethod(Class<?> clazz, String name, @Nullable Class<?>... paramTypes) {
 		Assert.notNull(clazz, "Class must not be null");
 		Assert.notNull(name, "Method name must not be null");
+		//临时存储要正在查找的类
 		Class<?> searchType = clazz;
 		while (searchType != null) {
-			Method[] methods = searchType.isInterface() ?
-					searchType.getMethods() :
-					getDeclaredMethods(searchType, false);
+			// 如果正在查找的Class是接口
+			// 1 直接调用JDK提供的getMethods()，用来返回父类或者父接口中所有的公共方法(public修饰符修饰的)，
+			//    由于接口中的方法全部是(public修饰符修饰的)，因此在此一次性全部返回要搜索的方法
+			// 2 查找指定的方法，如果存在则返回
+			// 3 接口不存在父类..
+
+			// 如果正在查找不是接口而是实现类，
+			// 1 通过getDeclaredMethods()获取本类中的所有方法，包括私有的(private、protected、默认以及public)的方法
+			//   这里getDeclaredMethods()对JDK方法进行了扩展，针对JDK8之后新特性default，同时还获取本类直接实现所有接口，以及其接口父接口中default方法
+			// 2 从本类的接口中查找搜索的方法
+			// 3 本类中不存在，从父类递归查找
+			Method[] methods = searchType.isInterface() ? searchType.getMethods() : getDeclaredMethods(searchType, false);
 			for (Method method : methods) {
 				if (name.equals(method.getName()) &&
 						(paramTypes == null || Arrays.equals(paramTypes, method.getParameterTypes()))) {
@@ -250,13 +248,9 @@ public abstract class ReflectionUtils {
 	}
 
 	/**
-	 * Invoke the specified {@link Method} against the supplied target object with no arguments.
-	 * The target object can be {@code null} when invoking a static {@link Method}.
-	 * <p>Thrown exceptions are handled via a call to {@link #handleReflectionException}.
-	 * @param method the method to invoke
-	 * @param target the target object to invoke the method on
-	 * @return the invocation result, if any
-	 * @see #invokeMethod(java.lang.reflect.Method, Object, Object[])
+	 * 调用指定对象不带参数的方法
+	 * 如果调用的方法是静态方{@link方法}时，指定的对象可以为{@code null}
+	 * 同时通过调用{@link #handleReflectionException}处理抛出的异常。
 	 */
 	@Nullable
 	public static Object invokeMethod(Method method, @Nullable Object target) {
