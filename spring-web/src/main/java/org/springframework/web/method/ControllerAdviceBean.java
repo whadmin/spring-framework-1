@@ -216,32 +216,32 @@ public class ControllerAdviceBean implements Ordered {
 
 
 	/**
-	 * Find beans annotated with {@link ControllerAdvice @ControllerAdvice} in the
-	 * given {@link ApplicationContext} and wrap them as {@code ControllerAdviceBean}
-	 * instances.
-	 * <p>As of Spring Framework 5.2, the {@code ControllerAdviceBean} instances
-	 * in the returned list are sorted using {@link OrderComparator#sort(List)}.
-	 * @see #getOrder()
-	 * @see OrderComparator
-	 * @see Ordered
+	 * 扫描使用@ControllerAdvice注解的Bean,将其构造成ControllerAdviceBean对象，放入列表返回
 	 */
 	public static List<ControllerAdviceBean> findAnnotatedBeans(ApplicationContext context) {
+		//临时存储 ControllerAdviceBean 列表对象
 		List<ControllerAdviceBean> adviceBeans = new ArrayList<>();
+		//从IOC 容器获取所有Bean名称 (类型为Object)
 		for (String name : BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context, Object.class)) {
+			// 获取IOC 容器指定 Bean名称 上 ControllerAdvice.class
 			ControllerAdvice controllerAdvice = context.findAnnotationOnBean(name, ControllerAdvice.class);
+			// 如果存在 ControllerAdvice 注解，构作ControllerAdviceBean对象添加到adviceBeans
 			if (controllerAdvice != null) {
-				// Use the @ControllerAdvice annotation found by findAnnotationOnBean()
-				// in order to avoid a subsequent lookup of the same annotation.
 				adviceBeans.add(new ControllerAdviceBean(name, context, controllerAdvice));
 			}
 		}
+		//排序
 		OrderComparator.sort(adviceBeans);
 		return adviceBeans;
 	}
 
+	/**
+	 * 获取指定Bean类型，如果是CGLIB代理类会返回原始类
+	 */
 	@Nullable
 	private static Class<?> getBeanType(String beanName, BeanFactory beanFactory) {
 		Class<?> beanType = beanFactory.getType(beanName);
+		//如果是CGLIB代理类会返回原始类
 		return (beanType != null ? ClassUtils.getUserClass(beanType) : null);
 	}
 

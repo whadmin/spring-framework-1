@@ -31,15 +31,12 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.ModelAndView;
 
 /**
- * Abstract base class for {@link HandlerExceptionResolver} implementations.
+ * HandlerExceptionResolver 实现类的基类。
+ * <p>
+ * 1 提供当前异常解析器能处理 Handler处理程序对象的集合
+ * 2 提供当前异常解析器能处理 Handler处理程序对象的Class数组
+ * 3 如果没有设置1，2 表示能处理所有Handler处理程序
  *
- * <p>Supports mapped {@linkplain #setMappedHandlers handlers} and
- * {@linkplain #setMappedHandlerClasses handler classes} that the resolver
- * should be applied to and implements the {@link Ordered} interface.
- *
- * @author Arjen Poutsma
- * @author Juergen Hoeller
- * @author Sam Brannen
  * @since 3.0
  */
 public abstract class AbstractHandlerExceptionResolver implements HandlerExceptionResolver, Ordered {
@@ -47,83 +44,118 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	private static final String HEADER_CACHE_CONTROL = "Cache-Control";
 
 
-	/** Logger available to subclasses. */
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	/**
+	 * 顺序，优先级最低
+	 */
 	private int order = Ordered.LOWEST_PRECEDENCE;
 
+	/**
+	 * 异常解析器能处理 Handler处理程序对象的集合
+	 */
 	@Nullable
 	private Set<?> mappedHandlers;
 
+	/**
+	 * 异常解析器能处理 Handler处理程序对象的Class数组
+	 */
 	@Nullable
 	private Class<?>[] mappedHandlerClasses;
 
+	/**
+	 * 打印警告日志
+	 */
 	@Nullable
 	private Log warnLogger;
 
+	/**
+	 * 防止响应缓存
+	 */
 	private boolean preventResponseCaching = false;
 
 
+	/**
+	 * 设置排序优先级别
+	 */
 	public void setOrder(int order) {
 		this.order = order;
 	}
 
+	/**
+	 * 获取排序优先级别
+	 */
 	@Override
 	public int getOrder() {
 		return this.order;
 	}
 
-	/**
-	 * Specify the set of handlers that this exception resolver should apply to.
-	 * <p>The exception mappings and the default error view will only apply to the specified handlers.
-	 * <p>If no handlers or handler classes are set, the exception mappings and the default error
-	 * view will apply to all handlers. This means that a specified default error view will be used
-	 * as a fallback for all exceptions; any further HandlerExceptionResolvers in the chain will be
-	 * ignored in this case.
-	 */
+
 	public void setMappedHandlers(Set<?> mappedHandlers) {
 		this.mappedHandlers = mappedHandlers;
 	}
 
-	/**
-	 * Specify the set of classes that this exception resolver should apply to.
-	 * <p>The exception mappings and the default error view will only apply to handlers of the
-	 * specified types; the specified types may be interfaces or superclasses of handlers as well.
-	 * <p>If no handlers or handler classes are set, the exception mappings and the default error
-	 * view will apply to all handlers. This means that a specified default error view will be used
-	 * as a fallback for all exceptions; any further HandlerExceptionResolvers in the chain will be
-	 * ignored in this case.
-	 */
 	public void setMappedHandlerClasses(Class<?>... mappedHandlerClasses) {
 		this.mappedHandlerClasses = mappedHandlerClasses;
 	}
 
-	/**
-	 * Set the log category for warn logging. The name will be passed to the underlying logger
-	 * implementation through Commons Logging, getting interpreted as a log category according
-	 * to the logger's configuration. If {@code null} or empty String is passed, warn logging
-	 * is turned off.
-	 * <p>By default there is no warn logging although subclasses like
-	 * {@link org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver}
-	 * can change that default. Specify this setting to activate warn logging into a specific
-	 * category. Alternatively, override the {@link #logException} method for custom logging.
-	 * @see org.apache.commons.logging.LogFactory#getLog(String)
-	 * @see java.util.logging.Logger#getLogger(String)
-	 */
+
 	public void setWarnLogCategory(String loggerName) {
 		this.warnLogger = (StringUtils.hasLength(loggerName) ? LogFactory.getLog(loggerName) : null);
 	}
 
-	/**
-	 * Specify whether to prevent HTTP response caching for any view resolved
-	 * by this exception resolver.
-	 * <p>Default is {@code false}. Switch this to {@code true} in order to
-	 * automatically generate HTTP response headers that suppress response caching.
-	 */
 	public void setPreventResponseCaching(boolean preventResponseCaching) {
 		this.preventResponseCaching = preventResponseCaching;
 	}
 
+
+	/**
+	 * 使用warnLogger,打印异常
+	 */
+	protected void logException(Exception ex, HttpServletRequest request) {
+		if (this.warnLogger != null && this.warnLogger.isWarnEnabled()) {
+			this.warnLogger.warn(buildLogMessage(ex, request));
+		}
+	}
+
+	protected String buildLogMessage(Exception ex, HttpServletRequest request) {
+		return "Resolved [" + ex + "]";
+	}
+
+	/**
+	 * 设置阻止响应缓存
+	 */
+	protected void prepareResponse(Exception ex, HttpServletResponse response) {
+		if (this.preventResponseCaching) {
+			preventCaching(response);
+		}
+	}
+
+	protected void preventCaching(HttpServletResponse response) {
+		response.addHeader(HEADER_CACHE_CONTROL, "no-store");
+	}
+
+	/**
+	 * 检查此异常解析器是否能处理给定 handler处理程序。
+	 */
+	protected boolean shouldApplyTo(HttpServletRequest request, @Nullable Object handler) {
+		if (handler != null) {
+			// <1> 如果 mappedHandlers 包含 handler 对象，则返回 true
+			if (this.mappedHandlers != null && this.mappedHandlers.contains(handler)) {
+				return true;
+			}
+			// <2> 如果 mappedHandlerClasses 包含 handler 的类型，则返回 true
+			if (this.mappedHandlerClasses != null) {
+				for (Class<?> handlerClass : this.mappedHandlerClasses) {
+					if (handlerClass.isInstance(handler)) {
+						return true;
+					}
+				}
+			}
+		}
+		// <3> 如果 mappedHandlers 和 mappedHandlerClasses 都为空，说明直接所有handler处理程序
+		return (this.mappedHandlers == null && this.mappedHandlerClasses == null);
+	}
 
 	/**
 	 * Check whether this resolver is supposed to apply (i.e. if the supplied handler
@@ -136,102 +168,24 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	public ModelAndView resolveException(
 			HttpServletRequest request, HttpServletResponse response, @Nullable Object handler, Exception ex) {
 
+		/** <1>  检查此异常解析器是否支持处理给定 handler处理程序。**/
 		if (shouldApplyTo(request, handler)) {
+			/** <2>  设置阻止响应缓存   **/
 			prepareResponse(ex, response);
+			/** <3>  调用模板方法，子类处理异常   **/
 			ModelAndView result = doResolveException(request, response, handler, ex);
+			/** <4>  打印日志   **/
 			if (result != null) {
-				// Print debug message when warn logger is not enabled.
 				if (logger.isDebugEnabled() && (this.warnLogger == null || !this.warnLogger.isWarnEnabled())) {
 					logger.debug("Resolved [" + ex + "]" + (result.isEmpty() ? "" : " to " + result));
 				}
-				// Explicitly configured warn logger in logException method.
 				logException(ex, request);
 			}
 			return result;
-		}
-		else {
+		} else {
+			//不支持返回null
 			return null;
 		}
-	}
-
-	/**
-	 * Check whether this resolver is supposed to apply to the given handler.
-	 * <p>The default implementation checks against the configured
-	 * {@linkplain #setMappedHandlers handlers} and
-	 * {@linkplain #setMappedHandlerClasses handler classes}, if any.
-	 * @param request current HTTP request
-	 * @param handler the executed handler, or {@code null} if none chosen
-	 * at the time of the exception (for example, if multipart resolution failed)
-	 * @return whether this resolved should proceed with resolving the exception
-	 * for the given request and handler
-	 * @see #setMappedHandlers
-	 * @see #setMappedHandlerClasses
-	 */
-	protected boolean shouldApplyTo(HttpServletRequest request, @Nullable Object handler) {
-		if (handler != null) {
-			if (this.mappedHandlers != null && this.mappedHandlers.contains(handler)) {
-				return true;
-			}
-			if (this.mappedHandlerClasses != null) {
-				for (Class<?> handlerClass : this.mappedHandlerClasses) {
-					if (handlerClass.isInstance(handler)) {
-						return true;
-					}
-				}
-			}
-		}
-		// Else only apply if there are no explicit handler mappings.
-		return (this.mappedHandlers == null && this.mappedHandlerClasses == null);
-	}
-
-	/**
-	 * Log the given exception at warn level, provided that warn logging has been
-	 * activated through the {@link #setWarnLogCategory "warnLogCategory"} property.
-	 * <p>Calls {@link #buildLogMessage} in order to determine the concrete message to log.
-	 * @param ex the exception that got thrown during handler execution
-	 * @param request current HTTP request (useful for obtaining metadata)
-	 * @see #setWarnLogCategory
-	 * @see #buildLogMessage
-	 * @see org.apache.commons.logging.Log#warn(Object, Throwable)
-	 */
-	protected void logException(Exception ex, HttpServletRequest request) {
-		if (this.warnLogger != null && this.warnLogger.isWarnEnabled()) {
-			this.warnLogger.warn(buildLogMessage(ex, request));
-		}
-	}
-
-	/**
-	 * Build a log message for the given exception, occurred during processing the given request.
-	 * @param ex the exception that got thrown during handler execution
-	 * @param request current HTTP request (useful for obtaining metadata)
-	 * @return the log message to use
-	 */
-	protected String buildLogMessage(Exception ex, HttpServletRequest request) {
-		return "Resolved [" + ex + "]";
-	}
-
-	/**
-	 * Prepare the response for the exceptional case.
-	 * <p>The default implementation prevents the response from being cached,
-	 * if the {@link #setPreventResponseCaching "preventResponseCaching"} property
-	 * has been set to "true".
-	 * @param ex the exception that got thrown during handler execution
-	 * @param response current HTTP response
-	 * @see #preventCaching
-	 */
-	protected void prepareResponse(Exception ex, HttpServletResponse response) {
-		if (this.preventResponseCaching) {
-			preventCaching(response);
-		}
-	}
-
-	/**
-	 * Prevents the response from being cached, through setting corresponding
-	 * HTTP {@code Cache-Control: no-store} header.
-	 * @param response current HTTP response
-	 */
-	protected void preventCaching(HttpServletResponse response) {
-		response.addHeader(HEADER_CACHE_CONTROL, "no-store");
 	}
 
 
@@ -242,11 +196,12 @@ public abstract class AbstractHandlerExceptionResolver implements HandlerExcepti
 	 * Note that this template method will be invoked <i>after</i> checking whether this
 	 * resolved applies ("mappedHandlers" etc), so an implementation may simply proceed
 	 * with its actual exception handling.
-	 * @param request current HTTP request
+	 *
+	 * @param request  current HTTP request
 	 * @param response current HTTP response
-	 * @param handler the executed handler, or {@code null} if none chosen at the time
-	 * of the exception (for example, if multipart resolution failed)
-	 * @param ex the exception that got thrown during handler execution
+	 * @param handler  the executed handler, or {@code null} if none chosen at the time
+	 *                 of the exception (for example, if multipart resolution failed)
+	 * @param ex       the exception that got thrown during handler execution
 	 * @return a corresponding {@code ModelAndView} to forward to,
 	 * or {@code null} for default processing in the resolution chain
 	 */

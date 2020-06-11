@@ -61,6 +61,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.RequestContextUtils;
 
 /**
+ * 基于 @ExceptionHandler 配置 HandlerMethod 的 HandlerExceptionResolver 实现类
+ *
  * An {@link AbstractHandlerMethodExceptionResolver} that resolves exceptions
  * through {@code @ExceptionHandler} methods.
  *
@@ -76,20 +78,40 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExceptionResolver
 		implements ApplicationContextAware, InitializingBean {
 
+	/**
+	 * 处理程序方法参数解析器列表
+	 */
 	@Nullable
 	private List<HandlerMethodArgumentResolver> customArgumentResolvers;
 
+	/**
+	 * 处理程序方法参数解析器组合对象
+	 */
 	@Nullable
 	private HandlerMethodArgumentResolverComposite argumentResolvers;
 
+	/**
+	 * 处理程序方法返回处理器列表
+	 */
 	@Nullable
 	private List<HandlerMethodReturnValueHandler> customReturnValueHandlers;
 
+	/**
+	 * 处理程序方法返回处理器组合对象
+	 */
 	@Nullable
 	private HandlerMethodReturnValueHandlerComposite returnValueHandlers;
 
+	/**
+	 * 消息转换器机制（完成请求报文到对象和对象到响应报文的转换）
+	 */
 	private List<HttpMessageConverter<?>> messageConverters;
 
+	/**
+	 * 内容协商管理器
+	 * 1 根据request中的内容，解析出MediaType的List列表
+	 * 2 根据MediaType，解析出对应的url后缀名
+	 */
 	private ContentNegotiationManager contentNegotiationManager = new ContentNegotiationManager();
 
 	private final List<Object> responseBodyAdvice = new ArrayList<>();
@@ -252,9 +274,12 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 	}
 
 
+	/**
+	 * 初始化 ExceptionHandlerExceptionResolver
+	 */
 	@Override
 	public void afterPropertiesSet() {
-		// Do this first, it may add ResponseBodyAdvice beans
+		// 初始化 exceptionHandlerAdviceCache、responseBodyAdvice
 		initExceptionHandlerAdviceCache();
 
 		if (this.argumentResolvers == null) {

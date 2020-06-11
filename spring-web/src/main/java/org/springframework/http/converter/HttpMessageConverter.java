@@ -25,6 +25,9 @@ import org.springframework.http.MediaType;
 import org.springframework.lang.Nullable;
 
 /**
+ * 实现 Spring MVC 中，可以使用 @RequestBody 和 @ResponseBody 两个注解
+ * 分别完成请求报文到对象和对象到响应报文的转换，底层这种灵活的消息转换机制。
+ *
  * Strategy interface that specifies a converter that can convert from and to HTTP requests and responses.
  *
  * @author Arjen Poutsma
