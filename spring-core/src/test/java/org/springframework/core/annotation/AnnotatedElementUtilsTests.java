@@ -335,6 +335,7 @@ class AnnotatedElementUtilsTests {
 
 	@Test
 	void getMergedAnnotationAttributesFromInterfaceImplementedBySuperclass() {
+		assertThat(isAnnotated(ConcreteClassWithInheritedAnnotation.class, Transactional.class)).isFalse();
 		Class<?> element = ConcreteClassWithInheritedAnnotation.class;
 		String name = TX_NAME;
 		AnnotationAttributes attributes = getMergedAnnotationAttributes(element, name);
@@ -448,7 +449,6 @@ class AnnotatedElementUtilsTests {
 		assertThat(attributes.getStringArray("xmlFiles")).as("xmlFiles").isEqualTo(expected);
 		assertThat(attributes.getStringArray("locations")).as("locations").isEqualTo(expected);
 		assertThat(attributes.getStringArray("value")).as("value").isEqualTo(expected);
-
 		// Verify contracts between utility methods:
 		assertThat(isAnnotated(element, name)).isTrue();
 	}

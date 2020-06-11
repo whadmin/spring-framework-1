@@ -187,18 +187,12 @@ public abstract class AnnotatedElementUtils {
 	}
 
 	/**
-	 * Determine if an annotation of the specified {@code annotationType}
-	 * is <em>present</em> on the supplied {@link AnnotatedElement} or
-	 * within the annotation hierarchy <em>above</em> the specified element.
-	 * <p>If this method returns {@code true}, then {@link #getMergedAnnotationAttributes}
-	 * will return a non-null value.
-	 * <p>This method follows <em>get semantics</em> as described in the
-	 * {@linkplain AnnotatedElementUtils class-level javadoc}.
-	 * @param element the annotated element
-	 * @param annotationType the annotation type to find
-	 * @return {@code true} if a matching annotation is present
-	 * @since 4.2.3
-	 * @see #hasAnnotation(AnnotatedElement, Class)
+	 * 判断指定的{@link AnnotatedElement}是否被指定注解修饰（也包括注解上的元注解）
+	 * 如果{@link AnnotatedElement}类型为Class,修饰注解包括Class上的修饰的注解(及其元注解)，同时包括其祖先类Class上的修饰的注解(及其元注解)
+	 * 如果{@link AnnotatedElement}类型为Annotation，修饰注解包括为其上的元注解
+	 *
+	 * <p>如果此方法返回{@code true}，则{@link #getMergedAnnotationAttributes}将返回非空值。
+	 * <p>此方法遵循<@> get语义</ em>，如{@linkplain AnnotatedElementUtils 类级javadoc}中所述
 	 */
 	public static boolean isAnnotated(AnnotatedElement element, Class<? extends Annotation> annotationType) {
 		// Shortcut: directly present on the element, with no merging needed?

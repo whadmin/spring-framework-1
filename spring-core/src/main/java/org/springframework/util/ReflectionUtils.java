@@ -258,14 +258,9 @@ public abstract class ReflectionUtils {
 	}
 
 	/**
-	 * Invoke the specified {@link Method} against the supplied target object with the
-	 * supplied arguments. The target object can be {@code null} when invoking a
-	 * static {@link Method}.
-	 * <p>Thrown exceptions are handled via a call to {@link #handleReflectionException}.
-	 * @param method the method to invoke
-	 * @param target the target object to invoke the method on
-	 * @param args the invocation arguments (may be {@code null})
-	 * @return the invocation result, if any
+	 * 调用指定对象中指定方法，
+	 * 如果调用的方法是静态方{@link方法}时，指定的对象可以为{@code null}
+	 * 同时通过调用{@link #handleReflectionException}处理抛出的异常。
 	 */
 	@Nullable
 	public static Object invokeMethod(Method method, @Nullable Object target, @Nullable Object... args) {
@@ -279,13 +274,9 @@ public abstract class ReflectionUtils {
 	}
 
 	/**
-	 * Determine whether the given method explicitly declares the given
-	 * exception or one of its superclasses, which means that an exception
-	 * of that type can be propagated as-is within a reflective invocation.
-	 * @param method the declaring method
-	 * @param exceptionType the exception to throw
-	 * @return {@code true} if the exception can be thrown as-is;
-	 * {@code false} if it needs to be wrapped
+	 确定给定方法是否显式声明给定
+	 *异常或其超类之一，表示一个异常
+	 该类型的*可以在反射调用中按原样传播。
 	 */
 	public static boolean declaresException(Method method, Class<?> exceptionType) {
 		Assert.notNull(method, "Method must not be null");

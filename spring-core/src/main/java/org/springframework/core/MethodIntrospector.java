@@ -60,10 +60,12 @@ public final class MethodIntrospector {
 		Set<Class<?>> handlerTypes = new LinkedHashSet<>();
 		Class<?> specificHandlerType = null;
 
+		//判断当前类是否是JDK代理类
 		if (!Proxy.isProxyClass(targetType)) {
 			specificHandlerType = ClassUtils.getUserClass(targetType);
 			handlerTypes.add(specificHandlerType);
 		}
+		//
 		handlerTypes.addAll(ClassUtils.getAllInterfacesForClassAsSet(targetType));
 
 		for (Class<?> currentHandlerType : handlerTypes) {
