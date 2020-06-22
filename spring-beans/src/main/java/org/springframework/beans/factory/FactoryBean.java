@@ -37,7 +37,7 @@ public interface FactoryBean<T> {
 	T getObject() throws Exception;
 
 	/**
-	 * 返回此FactoryBean创建的对象的类型，或者null如果事先未知，则返回。
+	 * 返回此FactoryBean创建的对象的类型，
 	 */
 	@Nullable
 	Class<?> getObjectType();

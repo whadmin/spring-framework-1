@@ -30,43 +30,51 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
- * Handler execution chain, consisting of handler object and any handler interceptors.
- * Returned by HandlerMapping's {@link HandlerMapping#getHandler} method.
- *
- * @author Juergen Hoeller
- * @since 20.06.2003
- * @see HandlerInterceptor
+ * 处理程序执行链，由处理程序对象和任何处理程序拦截器组成。
+ * 由HandlerMapping的{@link HandlerMapping＃getHandler}方法返回。
  */
 public class HandlerExecutionChain {
 
+	/**
+	 * 日志
+	 */
 	private static final Log logger = LogFactory.getLog(HandlerExecutionChain.class);
 
+	/**
+	 * 处理程序对象
+	 */
 	private final Object handler;
 
+	/**
+	 * 拦截器数组
+	 */
 	@Nullable
 	private HandlerInterceptor[] interceptors;
 
+	/**
+	 * 拦截器列表
+	 */
 	@Nullable
 	private List<HandlerInterceptor> interceptorList;
 
+	/**
+	 * 记录拦截器执行数组下标
+	 */
 	private int interceptorIndex = -1;
 
 
 	/**
-	 * Create a new HandlerExecutionChain.
-	 * @param handler the handler object to execute
+	 * 创建一个新的HandlerExecutionChain。
 	 */
 	public HandlerExecutionChain(Object handler) {
 		this(handler, (HandlerInterceptor[]) null);
 	}
 
 	/**
-	 * Create a new HandlerExecutionChain.
-	 * @param handler the handler object to execute
-	 * @param interceptors the array of interceptors to apply
-	 * (in the given order) before the handler itself executes
+	 * 创建一个新的HandlerExecutionChain。
 	 */
 	public HandlerExecutionChain(Object handler, @Nullable HandlerInterceptor... interceptors) {
+		// 如果处理程序本身是一个HandlerExecutionChain。，将拷贝器拦截器，设置行创建的HandlerExecutionChain。
 		if (handler instanceof HandlerExecutionChain) {
 			HandlerExecutionChain originalChain = (HandlerExecutionChain) handler;
 			this.handler = originalChain.getHandler();
@@ -74,6 +82,7 @@ public class HandlerExecutionChain {
 			CollectionUtils.mergeArrayIntoCollection(originalChain.getInterceptors(), this.interceptorList);
 			CollectionUtils.mergeArrayIntoCollection(interceptors, this.interceptorList);
 		}
+		// 设置处理程序handler，拦截器数组
 		else {
 			this.handler = handler;
 			this.interceptors = interceptors;
@@ -82,31 +91,43 @@ public class HandlerExecutionChain {
 
 
 	/**
-	 * Return the handler object to execute.
+	 * 获取 处理程序对象
 	 */
 	public Object getHandler() {
 		return this.handler;
 	}
 
+
+	/**
+	 * 拦截器列表添加拦截器
+	 */
 	public void addInterceptor(HandlerInterceptor interceptor) {
 		initInterceptorList().add(interceptor);
 	}
 
+	/**
+	 * 拦截器列表添加拦截器
+	 */
 	public void addInterceptor(int index, HandlerInterceptor interceptor) {
 		initInterceptorList().add(index, interceptor);
 	}
 
+	/**
+	 * 拦截器列表添加拦截器
+	 */
 	public void addInterceptors(HandlerInterceptor... interceptors) {
 		if (!ObjectUtils.isEmpty(interceptors)) {
 			CollectionUtils.mergeArrayIntoCollection(interceptors, initInterceptorList());
 		}
 	}
 
+	/**
+	 * 初始化拦截器列表，并清空蓝机器数组
+	 */
 	private List<HandlerInterceptor> initInterceptorList() {
 		if (this.interceptorList == null) {
 			this.interceptorList = new ArrayList<>();
 			if (this.interceptors != null) {
-				// An interceptor array specified through the constructor
 				CollectionUtils.mergeArrayIntoCollection(this.interceptors, this.interceptorList);
 			}
 		}
@@ -115,8 +136,7 @@ public class HandlerExecutionChain {
 	}
 
 	/**
-	 * Return the array of interceptors to apply (in the given order).
-	 * @return the array of HandlerInterceptors instances (may be {@code null})
+	 * 返回{@link HandlerInterceptor}实例的数组（以给定顺序）（可以为{@code null}）
 	 */
 	@Nullable
 	public HandlerInterceptor[] getInterceptors() {
@@ -128,18 +148,18 @@ public class HandlerExecutionChain {
 
 
 	/**
-	 * Apply preHandle methods of registered interceptors.
-	 * @return {@code true} if the execution chain should proceed with the
-	 * next interceptor or the handler itself. Else, DispatcherServlet assumes
-	 * that this interceptor has already dealt with the response itself.
+	 * 顺序执行所有拦截器{@link HandlerInterceptor#preHandle}方法，进行前置处理,所有通过返回true
 	 */
 	boolean applyPreHandle(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		HandlerInterceptor[] interceptors = getInterceptors();
 		if (!ObjectUtils.isEmpty(interceptors)) {
 			for (int i = 0; i < interceptors.length; i++) {
 				HandlerInterceptor interceptor = interceptors[i];
+				// 如果拦截器{@link HandlerInterceptor#preHandle}前置处理返回false
 				if (!interceptor.preHandle(request, response, this.handler)) {
+					// 执行顺序执行所有拦截器{@link HandlerInterceptor#afterCompletion}方法，进行后置处理
 					triggerAfterCompletion(request, response, null);
+					// 返回false
 					return false;
 				}
 				this.interceptorIndex = i;
@@ -149,11 +169,10 @@ public class HandlerExecutionChain {
 	}
 
 	/**
-	 * Apply postHandle methods of registered interceptors.
+	 * 顺序执行所有拦截器{@link HandlerInterceptor#postHandle}方法，进行后置处理
 	 */
 	void applyPostHandle(HttpServletRequest request, HttpServletResponse response, @Nullable ModelAndView mv)
 			throws Exception {
-
 		HandlerInterceptor[] interceptors = getInterceptors();
 		if (!ObjectUtils.isEmpty(interceptors)) {
 			for (int i = interceptors.length - 1; i >= 0; i--) {
@@ -164,9 +183,7 @@ public class HandlerExecutionChain {
 	}
 
 	/**
-	 * Trigger afterCompletion callbacks on the mapped HandlerInterceptors.
-	 * Will just invoke afterCompletion for all interceptors whose preHandle invocation
-	 * has successfully completed and returned true.
+	 * 逆序执行所有拦截器{@link HandlerInterceptor#afterCompletion}方法，进行完成处理
 	 */
 	void triggerAfterCompletion(HttpServletRequest request, HttpServletResponse response, @Nullable Exception ex)
 			throws Exception {
@@ -186,7 +203,7 @@ public class HandlerExecutionChain {
 	}
 
 	/**
-	 * Apply afterConcurrentHandlerStarted callback on mapped AsyncHandlerInterceptors.
+	 * 逆序执行所有拦截器{@link AsyncHandlerInterceptor#afterConcurrentHandlingStarted}方法，进行异步处理
 	 */
 	void applyAfterConcurrentHandlingStarted(HttpServletRequest request, HttpServletResponse response) {
 		HandlerInterceptor[] interceptors = getInterceptors();
@@ -206,9 +223,7 @@ public class HandlerExecutionChain {
 	}
 
 
-	/**
-	 * Delegates to the handler and interceptors' {@code toString()}.
-	 */
+
 	@Override
 	public String toString() {
 		Object handler = getHandler();

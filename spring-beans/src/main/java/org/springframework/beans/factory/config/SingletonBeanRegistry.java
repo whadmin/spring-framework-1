@@ -19,7 +19,7 @@ package org.springframework.beans.factory.config;
 import org.springframework.lang.Nullable;
 
 /**
- * 单例bean注册表
+ * 单例bean注册接口
  */
 public interface SingletonBeanRegistry {
 

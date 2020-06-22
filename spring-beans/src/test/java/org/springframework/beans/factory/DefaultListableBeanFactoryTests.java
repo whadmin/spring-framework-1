@@ -133,6 +133,9 @@ class DefaultListableBeanFactoryTests {
 	private DefaultListableBeanFactory lbf = new DefaultListableBeanFactory();
 
 
+	/**
+	 * 测试单例非延迟加载
+	 */
 	@Test
 	void unreferencedSingletonWasInstantiated() {
 		KnowsIfInstantiated.clearInstantiationRecord();
@@ -144,6 +147,9 @@ class DefaultListableBeanFactoryTests {
 		assertThat(KnowsIfInstantiated.wasInstantiated()).as("singleton was instantiated").isTrue();
 	}
 
+	/**
+	 * 测试单例延迟加载
+	 */
 	@Test
 	void lazyInitialization() {
 		KnowsIfInstantiated.clearInstantiationRecord();
@@ -160,15 +166,23 @@ class DefaultListableBeanFactoryTests {
 		assertThat(KnowsIfInstantiated.wasInstantiated()).as("singleton was instantiated").isTrue();
 	}
 
+	/**
+	 *  测试创建原型对象 FactoryBean(本身单例)
+	 *
+	 *  preInstantiateSingletons 预加载单例对象，会将FactoryBean(本身单例)创建，并放进单例对象池，但不会调用getObject()获取对象
+	 *  getBean 从缓存对象池获取FactoryBean，调用getObject()获取工厂创建对象
+	 */
 	@Test
 	void factoryBeanDidNotCreatePrototype() {
 		Properties p = new Properties();
 		p.setProperty("x1.(class)", DummyFactory.class.getName());
 		// Reset static state
 		DummyFactory.reset();
-		p.setProperty("x1.singleton", "false");
+		p.setProperty("x1.singleton", "false");//创建原型对象
 		assertThat(!DummyFactory.wasPrototypeCreated()).as("prototype not instantiated").isTrue();
 		(new PropertiesBeanDefinitionReader(lbf)).registerBeanDefinitions(p);
+
+
 		assertThat(!DummyFactory.wasPrototypeCreated()).as("prototype not instantiated").isTrue();
 		assertThat(lbf.getType("x1")).isEqualTo(TestBean.class);
 		lbf.preInstantiateSingletons();
@@ -181,6 +195,11 @@ class DefaultListableBeanFactoryTests {
 		assertThat(DummyFactory.wasPrototypeCreated()).as("prototype was instantiated").isTrue();
 	}
 
+	/**
+	 *  测试创建原型对象 FactoryBean(本身原型)
+	 *
+	 *  getBean 从缓存对象池获取FactoryBean，调用getObject()获取工厂创建对象
+	 */
 	@Test
 	void prototypeFactoryBeanIgnoredByNonEagerTypeMatching() {
 		Properties p = new Properties();

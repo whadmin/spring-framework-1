@@ -72,12 +72,16 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 
 
 	/**
-	 * 单例bean实例缓存  bean name --> bean instance （这里bean实例已实例化完成经过 createBeanInstance(创建)--populateBean(已依赖注入)--initializeBean（初始化）
+	 * 单例bean实例缓存  bean name --> bean instance
+	 *
+	 * bean实例已经 【createBeanInstance(创建)--populateBean(已依赖注入)--initializeBean(初始化)】
 	 */
 	private final Map<String, Object> singletonObjects = new ConcurrentHashMap<>(256);
 
 	/**
-	 * 早期bean实例工厂缓存 bean name --> ObjectFactory （这里早期bean实例只经过 createBeanInstance(创建)  未populateBean(已依赖注入)  未initializeBean（初始化）
+	 * bean实例工厂缓存 bean name --> ObjectFactory
+	 *
+	 * bean实例只经过 createBeanInstance(创建)  未populateBean(已依赖注入)  未initializeBean（初始化）
 	 **/
 	private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap<>(16);
 
@@ -145,6 +149,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		/** 判断beanName,singletonObject不能为null **/
 		Assert.notNull(beanName, "Bean name must not be null");
 		Assert.notNull(singletonObject, "Singleton object must not be null");
+
 		/** 对单例bean对象的高速缓存(单例bean注册表存储容器)加锁 **/
 		synchronized (this.singletonObjects) {
 			/** 如果注册beanName 已经存在抛出异常 **/

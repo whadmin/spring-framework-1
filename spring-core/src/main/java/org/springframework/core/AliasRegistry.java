@@ -17,13 +17,12 @@
 package org.springframework.core;
 
 /**
- * 用于管理别名的通用接口。用作{@link org.springframework.beans.factory.support.BeanDefinitionRegistry}的超级接口。
- * @since 2.5.2
+ * 别名注册接口
  */
 public interface AliasRegistry {
 
 	/**
-	 * 给定名称，为其注册一个别名。
+	 * 给指定Bean名称注册一个别名
 	 */
 	void registerAlias(String name, String alias);
 
@@ -33,12 +32,12 @@ public interface AliasRegistry {
 	void removeAlias(String alias);
 
 	/**
-	 * 是否存在此别名
+	 * 是否存在别名
 	 */
 	boolean isAlias(String name);
 
 	/**
-	 * 返回名称对应所有别名
+	 * 获取别名数组
 	 */
 	String[] getAliases(String name);
 

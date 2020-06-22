@@ -296,8 +296,9 @@ public class ExceptionHandlerExceptionResolver extends AbstractHandlerMethodExce
 		if (getApplicationContext() == null) {
 			return;
 		}
-
+        // <1> 扫描使用@ControllerAdvice注解的Bean,将其构造成ControllerAdviceBean对象，放入列表返回
 		List<ControllerAdviceBean> adviceBeans = ControllerAdviceBean.findAnnotatedBeans(getApplicationContext());
+		// <2> 遍历 adviceBeans
 		for (ControllerAdviceBean adviceBean : adviceBeans) {
 			Class<?> beanType = adviceBean.getBeanType();
 			if (beanType == null) {

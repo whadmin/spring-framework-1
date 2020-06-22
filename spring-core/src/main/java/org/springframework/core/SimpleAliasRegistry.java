@@ -30,23 +30,30 @@ import org.springframework.util.StringUtils;
 import org.springframework.util.StringValueResolver;
 
 /**
- * {@link AliasRegistry}接口的简单实现。, 作为基础类
+ * {@link AliasRegistry}接口的简单实现
+ *
  * @since 2.5.2
  */
 public class SimpleAliasRegistry implements AliasRegistry {
 
+	/**
+	 * 日志
+	 */
 	protected final Log logger = LogFactory.getLog(getClass());
 
-	/** 从别名 -- 规范名称 映射 */
+	/**
+	 * 从别名--bean名称Map
+	 */
 	private final Map<String, String> aliasMap = new ConcurrentHashMap<>(16);
 
-
 	/**
-	 * 注册别名
+	 * 给指定bean名称注册一个别名
 	 */
 	@Override
 	public void registerAlias(String name, String alias) {
+		//name  bean名称必须为Text
 		Assert.hasText(name, "'name' must not be empty");
+		//alias 别名必须为Text
 		Assert.hasText(alias, "'alias' must not be empty");
 		synchronized (this.aliasMap) {
 			if (alias.equals(name)) {
@@ -54,24 +61,31 @@ public class SimpleAliasRegistry implements AliasRegistry {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
 				}
-			}
-			else {
+			} else {
+				//获取当前注册别是否已经存在注册Bean
 				String registeredName = this.aliasMap.get(alias);
+				//已经注册Bean名称
 				if (registeredName != null) {
+					//如果重复注册直接返回
 					if (registeredName.equals(name)) {
 						return;
 					}
+					//如果不许别名覆盖抛出异常
 					if (!allowAliasOverriding()) {
 						throw new IllegalStateException("Cannot define alias '" + alias + "' for name '" +
 								name + "': It is already registered for name '" + registeredName + "'.");
 					}
+					//打印日志
 					if (logger.isDebugEnabled()) {
 						logger.debug("Overriding alias '" + alias + "' definition for registered name '" +
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				//检查给定名称是否已注册给定别名，如果存在抛出异常 （会递归检查规范名称作为别名是否注册给定别名）
 				checkForAliasCircle(name, alias);
+				//给指定Bean名称注册一个别名，存储在aliasMap中
 				this.aliasMap.put(alias, name);
+				//打印日志
 				if (logger.isTraceEnabled()) {
 					logger.trace("Alias definition '" + alias + "' registered for name '" + name + "'");
 				}
@@ -89,11 +103,11 @@ public class SimpleAliasRegistry implements AliasRegistry {
 
 	/**
 	 * 确定给定名称是否已注册给定别名（会递归检查规范名称作为别名是否注册给定别名）
-	 *
+	 * <p>
 	 * registry.registerAlias("test", "testAlias");
 	 * registry.registerAlias("testAlias", "testAlias2");
 	 * registry.registerAlias("testAlias2", "testAlias3");
-	 *
+	 * <p>
 	 * assertThat(registry.hasAlias("test", "testAlias")).isTrue();
 	 * assertThat(registry.hasAlias("test", "testAlias2")).isTrue();
 	 * assertThat(registry.hasAlias("test", "testAlias3")).isTrue();
@@ -187,9 +201,10 @@ public class SimpleAliasRegistry implements AliasRegistry {
 						}
 						throw new IllegalStateException(
 								"Cannot register resolved alias '" + resolvedAlias + "' (original: '" + alias +
-								"') for name '" + resolvedName + "': It is already registered for name '" +
-								registeredName + "'.");
+										"') for name '" + resolvedName + "': It is already registered for name '" +
+										registeredName + "'.");
 					}
+					/**  检查给定名称是否已注册给定别名，如果存在抛出异常 （会递归检查规范名称作为别名是否注册给定别名） **/
 					checkForAliasCircle(resolvedName, resolvedAlias);
 					this.aliasMap.remove(alias);
 					this.aliasMap.put(resolvedAlias, resolvedName);
@@ -203,7 +218,8 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
-	 * 检查给定名称是否已注册给定别名（会递归检查规范名称作为别名是否注册给定别名），如果存在抛出异常
+	 * 检查给定名称是否已注册给定别名，如果存在抛出异常
+	 * （会递归检查规范名称作为别名是否注册给定别名）
 	 */
 	protected void checkForAliasCircle(String name, String alias) {
 		if (hasAlias(alias, name)) {
@@ -215,11 +231,11 @@ public class SimpleAliasRegistry implements AliasRegistry {
 
 	/**
 	 * 获取name作为别名对应bean名称（会递归调用规范名称作为别名）
-	 *
+	 * <p>
 	 * registry.registerAlias("test", "testAlias");
 	 * registry.registerAlias("testAlias", "testAlias2");
 	 * registry.registerAlias("testAlias2", "testAlias3");
-	 *
+	 * <p>
 	 * assertThat(registry.canonicalName("testAlias")).isSameAs("test");
 	 * assertThat(registry.canonicalName("testAlias2")).isSameAs("test");
 	 * assertThat(registry.canonicalName("testAlias3")).isSameAs("test");

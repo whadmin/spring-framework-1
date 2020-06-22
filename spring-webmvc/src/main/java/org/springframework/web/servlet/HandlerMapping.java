@@ -100,9 +100,11 @@ public interface HandlerMapping {
 	String PRODUCIBLE_MEDIA_TYPES_ATTRIBUTE = HandlerMapping.class.getName() + ".producibleMediaTypes";
 
 	/**
-	 * 通过请求获取匹配的Handel,处理程序Handler被包装在{@link HandlerExecutionChain}实例中，并可选地伴随一些{@link HandlerInterceptor}实例。
-	 * DispatcherServlet将首先以给定的顺序调用每个HandlerInterceptor的{@code preHandle}方法，
-	 * 最后在满足以下条件时调用处理程序本身：所有{@code preHandle}方法都返回了{@code true}。
+	 * 1 通过请求{@link HttpServletRequest}获取匹配处理程序{@link Handler},
+	 * 2 将处理程序{@link Handler}被包装在{@link HandlerExecutionChain}实例中，
+	 * 3 {@link HandlerExecutionChain} 不仅包装了处理程序{@link Handler}，并管理多个{@link HandlerInterceptor}实例。
+	 * 4 {@link DispatcherServlet}，在调用处理程序{@link Handler}前，以给定的顺序调用每个{@link HandlerInterceptor#preHandle}方法，判断是否能执行
+	 * 5 {@link DispatcherServlet}，在调用处理程序{@link Handler}后，以给定的顺序调用每个{@link HandlerInterceptor#postHandle}方法
 	 */
 	@Nullable
 	HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception;

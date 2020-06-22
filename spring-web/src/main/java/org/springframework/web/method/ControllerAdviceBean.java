@@ -54,8 +54,7 @@ public class ControllerAdviceBean implements Ordered {
 	private final Object beanOrName;
 
 	/**
-	 * Reference to the resolved bean instance, potentially lazily retrieved
-	 * via the {@code BeanFactory}.
+	 * 对解析的bean实例的引用，可能通过{@code BeanFactory}延迟检索。
 	 */
 	@Nullable
 	private Object resolvedBean;
@@ -73,8 +72,7 @@ public class ControllerAdviceBean implements Ordered {
 
 
 	/**
-	 * Create a {@code ControllerAdviceBean} using the given bean instance.
-	 * @param bean the bean instance
+	 * 使用给定的bean实例创建一个{@code ControllerAdviceBean}。
 	 */
 	public ControllerAdviceBean(Object bean) {
 		Assert.notNull(bean, "Bean must not be null");
@@ -86,11 +84,7 @@ public class ControllerAdviceBean implements Ordered {
 	}
 
 	/**
-	 * Create a {@code ControllerAdviceBean} using the given bean name and
-	 * {@code BeanFactory}.
-	 * @param beanName the name of the bean
-	 * @param beanFactory a {@code BeanFactory} to retrieve the bean type initially
-	 * and later to resolve the actual bean
+	 * 使用给定的bean名称和{@code BeanFactory}创建一个{@code ControllerAdviceBean}。
 	 */
 	public ControllerAdviceBean(String beanName, BeanFactory beanFactory) {
 		this(beanName, beanFactory, null);

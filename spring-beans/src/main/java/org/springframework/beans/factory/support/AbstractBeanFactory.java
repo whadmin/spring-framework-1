@@ -779,7 +779,6 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 		/** 1  从单例bean对象缓存中获取bean实例，如果存在，通过获取bean实例判断其Class类型 **/
 		Object beanInstance = getSingleton(beanName, false);
-		/**   如果存在于单例bean对象缓存中且Class类型不为NullBean **/
 		if (beanInstance != null && beanInstance.getClass() != NullBean.class) {
 			/** bean实例类型为 FactoryBean 且 名称不以&作为前缀 通过factoryBean.getObjectType()获取创建对象Class类型  **/
 			if (beanInstance instanceof FactoryBean && !BeanFactoryUtils.isFactoryDereference(name)) {
@@ -791,16 +790,18 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 			}
 		}
 
-		/** 2 从父BeanFactory获取bean实例Class类型  **/
+		/** 2 优先从父BeanFactory获取bean实例Class类型  **/
 		BeanFactory parentBeanFactory = getParentBeanFactory();
 		if (parentBeanFactory != null && !containsBeanDefinition(beanName)) {
 			return parentBeanFactory.getType(originalBeanName(name));
 		}
 
 
-		/** 3 从合并后BeanDefinitions缓存中获取合并后BeanDefinitions，对于非FactoryBean.class,通过predictBeanType获取类型 **/
+		/** 3  前面2步获取失败，这里正式开始从当前IOC获取Bean Class类型  **/
+		/** 3.1 获取合并 RootBeanDefinition，通过RootBeanDefinition获取 Bean Class类型**/
 		RootBeanDefinition mbd = getMergedLocalBeanDefinition(beanName);
 		BeanDefinitionHolder dbd = mbd.getDecoratedDefinition();
+		//如果dbd存在，且参数并非&name，获取工厂Bean类型
 		if (dbd != null && !BeanFactoryUtils.isFactoryDereference(name)) {
 			RootBeanDefinition tbd = getMergedBeanDefinition(dbd.getBeanName(), dbd.getBeanDefinition(), mbd);
 			Class<?> targetClass = predictBeanType(dbd.getBeanName(), tbd);
@@ -1648,7 +1649,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 
 
 	/**
-	 * 预测Bean的Class类型
+	 * 推断Bean的Class类型
 	 */
 	@Nullable
 	protected Class<?> predictBeanType(String beanName, RootBeanDefinition mbd, Class<?>... typesToMatch) {
