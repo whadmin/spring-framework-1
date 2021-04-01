@@ -1088,6 +1088,9 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				// <8> 通过处理程序适配器，执行处理程序{@link Handler，获取ModelAndView
+				// <8.1> 如果 {@link Handler} 处理成功会返回 ModelAndView
+				// <8.1> 如果 {@link Handler} 处理请求失败对外抛出异常会被 <11> 处拦截
+				// <8.1> 对于处理资源的 HttpRequestHandlerAdapter 会返回null，是否处理成功看response中状态码
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				// <9> TODO wuhao.w 异步处理 ？
@@ -1099,19 +1102,23 @@ public class DispatcherServlet extends FrameworkServlet {
 				applyDefaultViewName(processedRequest, mv);
 				mappedHandler.applyPostHandle(processedRequest, response, mv);
 			} catch (Exception ex) {
-				// <11> 记录异常
+				// <11> 拦截ha.handle异常，并记录异常，在<12>处理请求结果中处理
 				dispatchException = ex;
 			} catch (Throwable err) {
-				// <11> 记录异常
+				// <11> 拦截ha.handle异常，并记录异常，在<12>处理请求结果中处理
 				dispatchException = new NestedServletException("Handler dispatch failed", err);
 			}
-			// <12> 执行处理对处理程序执行结果（无论是否发生异常）
+			// <12> 执行请求执行结果（无论是否发生异常）
 			processDispatchResult(processedRequest, response, mappedHandler, mv, dispatchException);
 		} catch (Exception ex) {
-			// <13> 逆序执行{@link HandlerExecutionChain}中所有拦截器{@link HandlerInterceptor#afterCompletion}方法，进行完成处理，并抛出异常
+			// <13> 拦截<12> 执行请求执行结果中异常，通常是 processHandlerException 自定义拦截器无法处理异常，对外抛出后在此被拦截
+			// <13.1> 逆序执行{@link HandlerExecutionChain}中所有拦截器{@link HandlerInterceptor#afterCompletion}方法，
+			// <13.2> 对外抛出异常交给servlet 容器处理，如果定义errorPage，将转发给errorPage处理类
 			triggerAfterCompletion(processedRequest, response, mappedHandler, ex);
 		} catch (Throwable err) {
-			// <13> 逆序执行{@link HandlerExecutionChain}中所有拦截器{@link HandlerInterceptor#afterCompletion}方法，进行完成处理，并抛出异常
+			// <13> 拦截<12> 执行请求执行结果中异常，通常是 processHandlerException 自定义拦截器无法处理异常，对外抛出后在此被拦截
+			// <13.1> 逆序执行{@link HandlerExecutionChain}中所有拦截器{@link HandlerInterceptor#afterCompletion}方法，
+			// <13.2> 对外抛出异常交给servlet 容器处理，如果定义errorPage，将转发给errorPage处理类
 			triggerAfterCompletion(processedRequest, response, mappedHandler,
 					new NestedServletException("Handler processing failed", err));
 		} finally {
@@ -1149,17 +1156,19 @@ public class DispatcherServlet extends FrameworkServlet {
 									   @Nullable HandlerExecutionChain mappedHandler, @Nullable ModelAndView mv,
 									   @Nullable Exception exception) throws Exception {
 
-		// 记录是否进行统一的异常处理，创建试图
+		//通过统一的异常处理，返回错误视图
 		boolean errorView = false;
 
-		// <1> 对于处理程序发生异常，进行异常处理，设置（生成）ModelAndView
+		// <1> 对于Handler程序发生异常，进行异常处理，设置（生成）ModelAndView
 		if (exception != null) {
 			// <1.1> 如果异常类型是ModelAndViewDefiningException，重写从ModelAndViewDefiningException获取ModelAndView，并设置
 			if (exception instanceof ModelAndViewDefiningException) {
 				logger.debug("ModelAndViewDefiningException encountered", exception);
 				mv = ((ModelAndViewDefiningException) exception).getModelAndView();
 			}
-			// <1.2> 进行统一的异常处理，创建试图
+			// <1.2> SpringMvc 自定义异常处理
+			// <1.2.1> 如果异常能被处理返回异常视图
+			// <1.2.1> 如果异常不能被处理对外抛出异常
 			else {
 				Object handler = (mappedHandler != null ? mappedHandler.getHandler() : null);
 				// 进行统一的异常处理
@@ -1169,16 +1178,18 @@ public class DispatcherServlet extends FrameworkServlet {
 			}
 		}
 
-		// <2> 进行{@link ModelAndView}视图渲染
+		// <2> 判断是否获取视图（视图包括正常返回视图,自定义异常处理返回视图），且视图未被清理
 		if (mv != null && !mv.wasCleared()) {
-			// <2.1> 视图渲染
+			// <2.1> 对视图渲染
 			render(mv, request, response);
 			// <2.2> 清理请求中的错误消息属性
 			if (errorView) {
 				WebUtils.clearErrorRequestAttributes(request);
 			}
 		}
-		// <3> 没有找到试图，打印日志
+
+		// <3> 获取未获取到视图
+		// <3.1> handler 处理类型为 HttpRequestHandlerAdapter 返回null，是否处理成功看response中状态码
 		else {
 			if (logger.isTraceEnabled()) {
 				logger.trace("No view rendering, null ModelAndView returned.");
